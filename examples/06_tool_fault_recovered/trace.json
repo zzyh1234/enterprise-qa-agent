@@ -1,0 +1,106 @@
+{
+  "task_id": "06_tool_fault_recovered",
+  "scenario_id": "06_tool_fault_recovered",
+  "question": "VPN 密码有什么要求？",
+  "status": "answered",
+  "planner": "mock",
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8,
+    "used_steps": 5,
+    "used_tool_calls": 4,
+    "exceeded": false,
+    "exceeded_reason": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 密码有什么要求？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "search_docs 调用失败：检索服务超时（模拟故障）",
+        "error": "检索服务超时（模拟故障）"
+      },
+      "follow_up": "search_docs：检索失败（检索服务超时（模拟故障）），原样重试一次以排除瞬时故障",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 密码有什么要求？",
+          "top_k": 5
+        },
+        "reason": "检索失败（检索服务超时（模拟故障）），原样重试一次以排除瞬时故障"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 3 篇文档，最高分 14.06：D05(14.06)、D01(6.65)、D06(3.11)"
+      },
+      "follow_up": "search_docs：最高检索分 14.06 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 密码有什么要求？",
+          "top_k": 5,
+          "use_expansion": true
+        },
+        "reason": "最高检索分 14.06 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 34.07：D05(34.07)、D01(9.93)、D06(8.49)、D09(6.06)、D02(4.62)"
+      },
+      "follow_up": "read_snippet：命中文档 D05（34.07 分，最佳片段 D05-3.2），读取 D05-3.2 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 4,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D05",
+          "section_id": "D05-3.2"
+        },
+        "reason": "命中文档 D05（34.07 分，最佳片段 D05-3.2），读取 D05-3.2 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D05/D05-3.2《密码与多因素认证》共 63 字"
+      },
+      "follow_up": "结束（answered）：已取得 D05/D05-3.2 的可核验原文且无未解决冲突，结束",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 5,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "answered",
+          "cited_docs": [
+            "D05"
+          ]
+        },
+        "reason": "已取得 D05/D05-3.2 的可核验原文且无未解决冲突，结束"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=answered，引用 1 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ]
+}

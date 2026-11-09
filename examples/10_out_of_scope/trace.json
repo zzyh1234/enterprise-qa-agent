@@ -1,0 +1,51 @@
+{
+  "task_id": "10_out_of_scope",
+  "scenario_id": "10_out_of_scope",
+  "question": "公司年会抽奖的奖品是什么？",
+  "status": "insufficient_evidence",
+  "planner": "mock",
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 6,
+    "used_steps": 2,
+    "used_tool_calls": 1,
+    "exceeded": false,
+    "exceeded_reason": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "公司年会抽奖的奖品是什么？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 11.24：D04(11.24)、D08(5.86)、D01(5.50)、D05(3.42)、D09(3.12)"
+      },
+      "follow_up": "结束（insufficient_evidence）：原查询与改写查询的最高分仅 11.24，低于可信阈值 60.00，停止检索并说明资料不足",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "insufficient_evidence",
+          "cited_docs": []
+        },
+        "reason": "原查询与改写查询的最高分仅 11.24，低于可信阈值 60.00，停止检索并说明资料不足"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=insufficient_evidence，引用 0 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ]
+}

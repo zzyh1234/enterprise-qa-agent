@@ -1,0 +1,50 @@
+{
+  "task_id": "08_budget_exceeded",
+  "scenario_id": "08_budget_exceeded",
+  "question": "云盘免费版单文件上传上限是多少？",
+  "status": "incomplete_budget_exceeded",
+  "planner": "mock",
+  "budget": {
+    "max_steps": 5,
+    "max_tool_calls": 1,
+    "used_steps": 1,
+    "used_tool_calls": 1,
+    "exceeded": true,
+    "exceeded_reason": "工具调用上限 1 已用尽（下一步需要执行 read_snippet）"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "云盘免费版单文件上传上限是多少？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 55.18：D06(55.18)、D02(13.69)、D01(7.16)、D05(6.32)、D07(4.83)"
+      },
+      "follow_up": "结束（incomplete_budget_exceeded）：工具调用上限触发，预算耗尽，循环强制停止",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 1,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "incomplete_budget_exceeded"
+        },
+        "reason": "工具调用上限触发，预算耗尽，循环强制停止"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "工具调用上限 1 已用尽（下一步需要执行 read_snippet）"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ]
+}

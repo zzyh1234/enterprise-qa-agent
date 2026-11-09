@@ -1,0 +1,92 @@
+{
+  "task_id": "08_budget_exceeded",
+  "question": "云盘免费版单文件上传上限是多少？",
+  "history": [],
+  "status": "incomplete_budget_exceeded",
+  "status_label": "未完成（达到执行上限）",
+  "answer": "已达到执行上限，任务未完成：工具调用上限 1 已用尽（下一步需要执行 read_snippet）。\n预算用尽时本应执行的下一个动作：read_snippet {'doc_id': 'D06', 'section_id': 'D06-1.1'}。\n请提高执行上限或缩小问题范围后重试。",
+  "citations": [],
+  "evidence_gaps": [
+    "工具调用上限 1 已用尽（下一步需要执行 read_snippet）",
+    "任务未完成，未给出确定性结论"
+  ],
+  "conflicts": [],
+  "clarification": null,
+  "audit": {
+    "passed": true,
+    "citations": [],
+    "citations_supported": true,
+    "conflict": {
+      "detected": false,
+      "acknowledged": true,
+      "values": [],
+      "topic": ""
+    },
+    "notes": []
+  },
+  "run": {
+    "planner": "mock",
+    "model": null,
+    "corpus": "data/documents.json",
+    "budget": {
+      "max_steps": 5,
+      "max_tool_calls": 1,
+      "used_steps": 1,
+      "used_tool_calls": 1,
+      "exceeded": true,
+      "exceeded_reason": "工具调用上限 1 已用尽（下一步需要执行 read_snippet）"
+    },
+    "tool_calls": 1,
+    "elapsed_ms": 0,
+    "failures": [
+      "工具调用上限 1 已用尽（下一步需要执行 read_snippet）"
+    ],
+    "notes": [
+      "计划中的下一步：read_snippet（预算不足未执行）"
+    ]
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "云盘免费版单文件上传上限是多少？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 55.18：D06(55.18)、D02(13.69)、D01(7.16)、D05(6.32)、D07(4.83)"
+      },
+      "follow_up": "结束（incomplete_budget_exceeded）：工具调用上限触发，预算耗尽，循环强制停止",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 1,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "incomplete_budget_exceeded"
+        },
+        "reason": "工具调用上限触发，预算耗尽，循环强制停止"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "工具调用上限 1 已用尽（下一步需要执行 read_snippet）"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ],
+  "scenario": {
+    "id": "08_budget_exceeded",
+    "title": "执行上限：工具调用仅允许 1 次",
+    "coverage": [
+      "步数/工具调用上限",
+      "未完成状态"
+    ],
+    "baseline": null
+  }
+}

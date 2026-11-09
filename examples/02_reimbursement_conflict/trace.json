@@ -1,0 +1,125 @@
+{
+  "task_id": "02_reimbursement_conflict",
+  "scenario_id": "02_reimbursement_conflict",
+  "question": "报销期限是多久？",
+  "status": "needs_clarification",
+  "planner": "mock",
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 8,
+    "used_steps": 6,
+    "used_tool_calls": 5,
+    "exceeded": false,
+    "exceeded_reason": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "报销期限是多久？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 7.30：D01(7.30)、D02(5.90)、D05(4.84)、D09(4.27)、D07(3.61)"
+      },
+      "follow_up": "search_docs：最高检索分 7.30 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "报销期限是多久？",
+          "top_k": 5,
+          "use_expansion": true
+        },
+        "reason": "最高检索分 7.30 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 59.07：D02(59.07)、D01(52.56)、D09(28.71)、D08(25.88)、D06(23.02)"
+      },
+      "follow_up": "read_snippet：命中文档 D02（59.07 分，最佳片段 D02-3.1），读取 D02-3.1 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D02",
+          "section_id": "D02-3.1"
+        },
+        "reason": "命中文档 D02（59.07 分，最佳片段 D02-3.1），读取 D02-3.1 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D02/D02-3.1《提交时限》共 53 字"
+      },
+      "follow_up": "read_snippet：命中文档 D01（52.55 分，最佳片段 D01-4.2），读取 D01-4.2 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 4,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D01",
+          "section_id": "D01-4.2"
+        },
+        "reason": "命中文档 D01（52.55 分，最佳片段 D01-4.2），读取 D01-4.2 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D01/D01-4.2《报销时限》共 58 字"
+      },
+      "follow_up": "search_docs：读到冲突取值（D02:15、D01:30），先查证是否存在制度解释/优先级说明，不擅自选择其一",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 5,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "报销时限 制度解释 不一致 以 为准",
+          "top_k": 5
+        },
+        "reason": "读到冲突取值（D02:15、D01:30），先查证是否存在制度解释/优先级说明，不擅自选择其一"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 12.98：D01(12.98)、D07(12.14)、D02(11.17)、D08(7.69)、D05(7.19)"
+      },
+      "follow_up": "ask_user：冲突无法在语料内消解，向用户确认适用制度",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 6,
+      "decision": {
+        "action": "ask_user",
+        "arguments": {
+          "question": "请确认适用于您情形的制度（报销期限）：",
+          "options": [
+            "按 D02《费用报销操作指引（2024 版）》执行",
+            "按 D01《员工费用报销管理规定》执行",
+            "按最新发布的版本执行",
+            "由财务共享中心解释"
+          ]
+        },
+        "reason": "冲突无法在语料内消解，向用户确认适用制度"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "暂停并向用户提问：请确认适用于您情形的制度（报销期限）："
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ]
+}

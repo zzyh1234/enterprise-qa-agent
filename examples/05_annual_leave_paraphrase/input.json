@@ -1,0 +1,19 @@
+{
+  "scenario_id": "05_annual_leave_paraphrase",
+  "title": "检索改进 + 相似问法：工作六年能休几天带薪假",
+  "question": "我工作六年了，一年能休几天带薪假？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [],
+  "coverage": [
+    "改写后的相似问题",
+    "检索改进"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "scenario_id": "02_reimbursement_conflict",
+  "title": "文档冲突：D01 规定 30 天、D02 规定 15 天且无适用范围/优先级",
+  "question": "报销期限是多久？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [],
+  "coverage": [
+    "明确答案",
+    "文档冲突",
+    "请求确认适用制度"
+  ]
+}

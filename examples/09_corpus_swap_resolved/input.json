@@ -1,0 +1,20 @@
+{
+  "scenario_id": "09_corpus_swap_resolved",
+  "title": "替换语料：新增制度解释后冲突可解（同一问题、不同动作与答案）",
+  "question": "报销期限是多久？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents_v2.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [],
+  "coverage": [
+    "文档冲突",
+    "查证后给出有依据的答案",
+    "替换文档内容后答案与动作改变"
+  ]
+}

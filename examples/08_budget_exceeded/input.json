@@ -1,0 +1,19 @@
+{
+  "scenario_id": "08_budget_exceeded",
+  "title": "执行上限：工具调用仅允许 1 次",
+  "question": "云盘免费版单文件上传上限是多少？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 5,
+    "max_tool_calls": 1
+  },
+  "tool_faults": [],
+  "coverage": [
+    "步数/工具调用上限",
+    "未完成状态"
+  ]
+}

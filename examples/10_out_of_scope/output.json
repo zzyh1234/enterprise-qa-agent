@@ -1,0 +1,91 @@
+{
+  "task_id": "10_out_of_scope",
+  "question": "公司年会抽奖的奖品是什么？",
+  "history": [],
+  "status": "insufficient_evidence",
+  "status_label": "资料不足，未回答",
+  "answer": "未在知识库中找到能回答该问题的制度或 FAQ，因此不作答。若问题涉及公司制度，请补充制度名称或联系制度归口部门。",
+  "citations": [],
+  "evidence_gaps": [
+    "知识库中未检索到能直接回答『公司年会抽奖的奖品是什么？』的制度或 FAQ 片段",
+    "已尝试的检索词：公司年会抽奖的奖品是什么？",
+    "低置信候选（均未达到证据阈值）：D04(11.24)、D08(5.86)、D01(5.50)"
+  ],
+  "conflicts": [],
+  "clarification": null,
+  "audit": {
+    "passed": true,
+    "citations": [],
+    "citations_supported": true,
+    "conflict": {
+      "detected": false,
+      "acknowledged": true,
+      "values": [],
+      "topic": ""
+    },
+    "notes": []
+  },
+  "run": {
+    "planner": "mock",
+    "model": null,
+    "corpus": "data/documents.json",
+    "budget": {
+      "max_steps": 8,
+      "max_tool_calls": 6,
+      "used_steps": 2,
+      "used_tool_calls": 1,
+      "exceeded": false,
+      "exceeded_reason": ""
+    },
+    "tool_calls": 1,
+    "elapsed_ms": 0,
+    "failures": [],
+    "notes": []
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "公司年会抽奖的奖品是什么？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 11.24：D04(11.24)、D08(5.86)、D01(5.50)、D05(3.42)、D09(3.12)"
+      },
+      "follow_up": "结束（insufficient_evidence）：原查询与改写查询的最高分仅 11.24，低于可信阈值 60.00，停止检索并说明资料不足",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "insufficient_evidence",
+          "cited_docs": []
+        },
+        "reason": "原查询与改写查询的最高分仅 11.24，低于可信阈值 60.00，停止检索并说明资料不足"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=insufficient_evidence，引用 0 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ],
+  "scenario": {
+    "id": "10_out_of_scope",
+    "title": "资料外问题：知识库没有对应制度",
+    "coverage": [
+      "资料外问题",
+      "不无依据回答",
+      "明确的未完成状态"
+    ],
+    "baseline": null
+  }
+}

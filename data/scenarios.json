@@ -1,0 +1,113 @@
+{
+  "note": "评测场景。所有场景都可用 MockPlanner 离线运行；输出写入 examples/<id>/。",
+  "scenarios": [
+    {
+      "id": "01_vpn_normal",
+      "title": "正常路径：单一文档给出明确答案",
+      "question": "VPN 账号多久需要重新认证？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 8, "max_tool_calls": 8 },
+      "coverage": ["明确答案", "引用文档 ID 与原文片段"]
+    },
+    {
+      "id": "02_reimbursement_conflict",
+      "title": "文档冲突：D01 规定 30 天、D02 规定 15 天且无适用范围/优先级",
+      "question": "报销期限是多久？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 8, "max_tool_calls": 8 },
+      "coverage": ["明确答案", "文档冲突", "请求确认适用制度"]
+    },
+    {
+      "id": "03_conflict_followup",
+      "title": "上下文追问：用户指定按最新版本执行",
+      "question": "那如果按最新发布的版本执行，期限是多久？",
+      "history_from": "02_reimbursement_conflict",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 10, "max_tool_calls": 8 },
+      "coverage": ["上下文追问", "文档冲突", "明确答案"]
+    },
+    {
+      "id": "04_receipt_lost_paraphrase",
+      "title": "改写后的相似问题：发票弄没了怎么办",
+      "question": "报销的发票不小心弄没了还能报吗？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 10, "max_tool_calls": 8 },
+      "coverage": ["改写后的相似问题", "读取原文后判断证据不足再继续"]
+    },
+    {
+      "id": "05_annual_leave_paraphrase",
+      "title": "检索改进 + 相似问法：工作六年能休几天带薪假",
+      "question": "我工作六年了，一年能休几天带薪假？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 10, "max_tool_calls": 8 },
+      "coverage": ["改写后的相似问题", "检索改进"]
+    },
+    {
+      "id": "06_tool_fault_recovered",
+      "title": "工具失败后重试恢复：检索超时一次",
+      "question": "VPN 密码有什么要求？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 10, "max_tool_calls": 8 },
+      "tool_faults": [
+        { "tool": "search_docs", "mode": "error", "remaining": 1, "message": "检索服务超时（模拟故障）" }
+      ],
+      "coverage": ["工具失败", "明确答案"]
+    },
+    {
+      "id": "07_tool_fault_blocked",
+      "title": "片段读取持续失败：拒绝无依据作答",
+      "question": "发票丢失了怎么办？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 10, "max_tool_calls": 8 },
+      "tool_faults": [
+        { "tool": "read_snippet", "mode": "error", "remaining": 20, "message": "片段读取服务不可用（模拟故障）" }
+      ],
+      "coverage": ["工具失败", "明确的未完成状态", "不无依据回答"]
+    },
+    {
+      "id": "08_budget_exceeded",
+      "title": "执行上限：工具调用仅允许 1 次",
+      "question": "云盘免费版单文件上传上限是多少？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 5, "max_tool_calls": 1 },
+      "coverage": ["步数/工具调用上限", "未完成状态"]
+    },
+    {
+      "id": "09_corpus_swap_resolved",
+      "title": "替换语料：新增制度解释后冲突可解（同一问题、不同动作与答案）",
+      "question": "报销期限是多久？",
+      "corpus": "data/documents_v2.json",
+      "planner": "mock",
+      "baseline": "02_reimbursement_conflict",
+      "budget": { "max_steps": 10, "max_tool_calls": 8 },
+      "coverage": ["文档冲突", "查证后给出有依据的答案", "替换文档内容后答案与动作改变"]
+    },
+    {
+      "id": "10_out_of_scope",
+      "title": "资料外问题：知识库没有对应制度",
+      "question": "公司年会抽奖的奖品是什么？",
+      "corpus": "data/documents.json",
+      "planner": "mock",
+      "budget": { "max_steps": 8, "max_tool_calls": 6 },
+      "coverage": ["资料外问题", "不无依据回答", "明确的未完成状态"]
+    },
+    {
+      "id": "11_replay_offline",
+      "title": "离线回放：用预记录决策走 OpenAI 兼容决策器（Mock 决策，仅验证闭环）",
+      "question": "VPN 账号多久需要重新认证？",
+      "corpus": "data/documents.json",
+      "planner": "replay",
+      "replay": "data/replay/vpn_replay.json",
+      "budget": { "max_steps": 8, "max_tool_calls": 8 },
+      "coverage": ["离线 Mock 入口", "模型动作协议与引用审计"]
+    }
+  ]
+}

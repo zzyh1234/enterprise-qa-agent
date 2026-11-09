@@ -1,0 +1,88 @@
+{
+  "task_id": "05_annual_leave_paraphrase",
+  "scenario_id": "05_annual_leave_paraphrase",
+  "question": "我工作六年了，一年能休几天带薪假？",
+  "status": "answered",
+  "planner": "mock",
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8,
+    "used_steps": 4,
+    "used_tool_calls": 3,
+    "exceeded": false,
+    "exceeded_reason": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "我工作六年了，一年能休几天带薪假？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 25.45：D04(25.45)、D08(8.34)、D02(4.54)、D05(3.13)、D06(2.99)"
+      },
+      "follow_up": "search_docs：最高检索分 25.45 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "我工作六年了，一年能休几天带薪假？",
+          "top_k": 5,
+          "use_expansion": true
+        },
+        "reason": "最高检索分 25.45 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 67.17：D04(67.17)、D08(11.14)、D02(4.54)、D05(3.13)、D06(2.99)"
+      },
+      "follow_up": "read_snippet：命中文档 D04（67.17 分，最佳片段 D04-2.1），读取 D04-2.1 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D04",
+          "section_id": "D04-2.1"
+        },
+        "reason": "命中文档 D04（67.17 分，最佳片段 D04-2.1），读取 D04-2.1 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D04/D04-2.1《年休假天数》共 69 字"
+      },
+      "follow_up": "结束（answered）：已取得 D04/D04-2.1 的可核验原文且无未解决冲突，结束",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 4,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "answered",
+          "cited_docs": [
+            "D04"
+          ]
+        },
+        "reason": "已取得 D04/D04-2.1 的可核验原文且无未解决冲突，结束"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=answered，引用 1 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ]
+}

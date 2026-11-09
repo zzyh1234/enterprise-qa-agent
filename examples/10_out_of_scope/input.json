@@ -1,0 +1,20 @@
+{
+  "scenario_id": "10_out_of_scope",
+  "title": "资料外问题：知识库没有对应制度",
+  "question": "公司年会抽奖的奖品是什么？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 6
+  },
+  "tool_faults": [],
+  "coverage": [
+    "资料外问题",
+    "不无依据回答",
+    "明确的未完成状态"
+  ]
+}

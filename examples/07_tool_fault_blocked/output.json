@@ -1,0 +1,218 @@
+{
+  "task_id": "07_tool_fault_blocked",
+  "question": "发票丢失了怎么办？",
+  "history": [],
+  "status": "blocked",
+  "status_label": "未完成（工具失败，无可用证据）",
+  "answer": "工具 read_snippet 连续失败，未取得可核验的原文，因此不给出答案。请稍后重试，或联系制度归口部门人工确认。",
+  "citations": [],
+  "evidence_gaps": [
+    "read_snippet 失败：片段读取服务不可用（模拟故障）",
+    "缺少可核验原文，任何结论都不可靠"
+  ],
+  "conflicts": [],
+  "clarification": null,
+  "audit": {
+    "passed": true,
+    "citations": [],
+    "citations_supported": true,
+    "conflict": {
+      "detected": false,
+      "acknowledged": true,
+      "values": [],
+      "topic": ""
+    },
+    "notes": []
+  },
+  "run": {
+    "planner": "mock",
+    "model": null,
+    "corpus": "data/documents.json",
+    "budget": {
+      "max_steps": 10,
+      "max_tool_calls": 8,
+      "used_steps": 9,
+      "used_tool_calls": 8,
+      "exceeded": false,
+      "exceeded_reason": ""
+    },
+    "tool_calls": 8,
+    "elapsed_ms": 0,
+    "failures": [
+      "read_snippet: 片段读取服务不可用（模拟故障）"
+    ],
+    "notes": []
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "发票丢失了怎么办？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 13.17：D09(13.17)、D01(8.65)、D07(5.84)、D02(4.78)、D06(1.93)"
+      },
+      "follow_up": "search_docs：最高检索分 13.17 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "发票丢失了怎么办？",
+          "top_k": 5,
+          "use_expansion": true
+        },
+        "reason": "最高检索分 13.17 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 28.75：D09(28.75)、D01(26.18)、D02(20.96)、D07(12.71)、D06(2.32)"
+      },
+      "follow_up": "read_snippet：命中文档 D09（28.75 分，最佳片段 D09-1.1），读取 D09-1.1 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D09",
+          "section_id": "D09-1.1"
+        },
+        "reason": "命中文档 D09（28.75 分，最佳片段 D09-1.1），读取 D09-1.1 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "read_snippet 调用失败：片段读取服务不可用（模拟故障）",
+        "error": "片段读取服务不可用（模拟故障）"
+      },
+      "follow_up": "read_snippet：读取 D09 失败（片段读取服务不可用（模拟故障）），重试一次以排除瞬时故障",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 4,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D09",
+          "section_id": "D09-1.1"
+        },
+        "reason": "读取 D09 失败（片段读取服务不可用（模拟故障）），重试一次以排除瞬时故障"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "read_snippet 调用失败：片段读取服务不可用（模拟故障）",
+        "error": "片段读取服务不可用（模拟故障）"
+      },
+      "follow_up": "read_snippet：D09 连续读取失败，改为读取其他候选：命中文档 D01（26.18 分，最佳片段 D01-4.3），读取 D01-4.3 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 5,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D01",
+          "section_id": "D01-4.3"
+        },
+        "reason": "D09 连续读取失败，改为读取其他候选：命中文档 D01（26.18 分，最佳片段 D01-4.3），读取 D01-4.3 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "read_snippet 调用失败：片段读取服务不可用（模拟故障）",
+        "error": "片段读取服务不可用（模拟故障）"
+      },
+      "follow_up": "read_snippet：读取 D01 失败（片段读取服务不可用（模拟故障）），重试一次以排除瞬时故障",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 6,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D01",
+          "section_id": "D01-4.3"
+        },
+        "reason": "读取 D01 失败（片段读取服务不可用（模拟故障）），重试一次以排除瞬时故障"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "read_snippet 调用失败：片段读取服务不可用（模拟故障）",
+        "error": "片段读取服务不可用（模拟故障）"
+      },
+      "follow_up": "read_snippet：D01 连续读取失败，改为读取其他候选：命中文档 D02（20.96 分，最佳片段 D02-3.2），读取 D02-3.2 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 7,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D02",
+          "section_id": "D02-3.2"
+        },
+        "reason": "D01 连续读取失败，改为读取其他候选：命中文档 D02（20.96 分，最佳片段 D02-3.2），读取 D02-3.2 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "read_snippet 调用失败：片段读取服务不可用（模拟故障）",
+        "error": "片段读取服务不可用（模拟故障）"
+      },
+      "follow_up": "read_snippet：读取 D02 失败（片段读取服务不可用（模拟故障）），重试一次以排除瞬时故障",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 8,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D02",
+          "section_id": "D02-3.2"
+        },
+        "reason": "读取 D02 失败（片段读取服务不可用（模拟故障）），重试一次以排除瞬时故障"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "read_snippet 调用失败：片段读取服务不可用（模拟故障）",
+        "error": "片段读取服务不可用（模拟故障）"
+      },
+      "follow_up": "结束（blocked）：片段读取持续失败且无其他可读候选，拒绝在无原文的情况下作答",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 9,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "blocked",
+          "cited_docs": []
+        },
+        "reason": "片段读取持续失败且无其他可读候选，拒绝在无原文的情况下作答"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=blocked，引用 0 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ],
+  "scenario": {
+    "id": "07_tool_fault_blocked",
+    "title": "片段读取持续失败：拒绝无依据作答",
+    "coverage": [
+      "工具失败",
+      "明确的未完成状态",
+      "不无依据回答"
+    ],
+    "baseline": null
+  }
+}

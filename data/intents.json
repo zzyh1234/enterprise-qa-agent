@@ -1,0 +1,103 @@
+{
+  "note": "意图规则：MockPlanner 用它判断『问题在问哪一类属性』以及『原文片段是否真的回答了该问题』。真实模型模式下不依赖该文件。",
+  "intents": [
+    {
+      "id": "receipt_lost",
+      "label": "票据遗失处理",
+      "match": {
+        "all": [],
+        "any": [
+          "(发票|票据|单据).{0,8}(丢|遗失|弄没|没了|找不到)",
+          "(丢|遗失|弄没|找不到).{0,6}(发票|票据|单据)"
+        ]
+      },
+      "topic": "票据遗失处理",
+      "evidence_keywords": ["遗失", "丢失"],
+      "value_patterns": [],
+      "numeric_unit": null,
+      "tiebreak_query": "票据遗失 制度解释 以 为准"
+    },
+    {
+      "id": "vpn_password",
+      "label": "VPN 密码要求",
+      "match": {
+        "all": ["vpn"],
+        "any": ["密码", "口令"]
+      },
+      "topic": "VPN 密码要求",
+      "evidence_keywords": ["密码"],
+      "value_patterns": ["密码长度不少于\\s*(\\d+)\\s*位", "每\\s*(\\d+)\\s*天更换"],
+      "numeric_unit": null,
+      "tiebreak_query": "VPN 密码 制度解释 以 为准"
+    },
+    {
+      "id": "vpn_reauth",
+      "label": "VPN 重新认证周期",
+      "match": {
+        "all": ["vpn"],
+        "any": ["多久", "多长时间", "有效期", "周期", "重新认证", "什么时候"]
+      },
+      "topic": "VPN 重新认证周期",
+      "evidence_keywords": ["重新认证"],
+      "value_patterns": ["(\\d+)\\s*天.{0,10}重新认证", "重新认证.{0,12}?(\\d+)\\s*天"],
+      "numeric_unit": "天",
+      "tiebreak_query": "VPN 重新认证 制度解释 以 为准"
+    },
+    {
+      "id": "reimbursement_deadline",
+      "label": "报销提交时限",
+      "match": {
+        "all": [],
+        "any": [
+          "报销.{0,8}(期限|时限|多久|几天|多少天|最晚|截止|什么时候)",
+          "(费用|发票|单子|单据).{0,10}(多久|最晚|什么时候).{0,8}报",
+          "多长时间.{0,4}(报销|报)"
+        ]
+      },
+      "topic": "报销期限",
+      "evidence_keywords": ["报销", "提交"],
+      "value_patterns": ["(\\d+)\\s*个?\\s*(?:自然日|工作日|天)"],
+      "numeric_unit": "天",
+      "tiebreak_query": "报销时限 制度解释 不一致 以 为准"
+    },
+    {
+      "id": "annual_leave_days",
+      "label": "年休假天数",
+      "match": {
+        "all": [],
+        "any": ["年假", "年休假", "带薪假", "带薪年假", "休假.{0,6}天"]
+      },
+      "topic": "年假天数",
+      "evidence_keywords": ["年休假"],
+      "value_patterns": ["年休假\\s*(\\d+)\\s*天"],
+      "numeric_unit": "天",
+      "tiebreak_query": "年假 制度解释 以 为准"
+    },
+    {
+      "id": "hotel_standard",
+      "label": "差旅住宿标准",
+      "match": {
+        "all": [],
+        "any": ["住宿.{0,8}(标准|多少|报销|钱)", "酒店.{0,8}(标准|多少|钱|报销)", "出差.{0,8}住"]
+      },
+      "topic": "住宿标准",
+      "evidence_keywords": ["住宿"],
+      "value_patterns": ["(\\d+)\\s*元/晚"],
+      "numeric_unit": "元/晚",
+      "tiebreak_query": "住宿标准 制度解释 以 为准"
+    },
+    {
+      "id": "cloud_upload_limit",
+      "label": "云盘上传限制",
+      "match": {
+        "all": [],
+        "any": ["云盘", "网盘", "上传.{0,8}(上限|限制|多大|最大)", "(文件|附件).{0,6}上限"]
+      },
+      "topic": "上传上限",
+      "evidence_keywords": ["上传"],
+      "value_patterns": ["(\\d+)\\s*GB"],
+      "numeric_unit": "GB",
+      "tiebreak_query": "云盘 上传 制度解释"
+    }
+  ]
+}

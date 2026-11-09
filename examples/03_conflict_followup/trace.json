@@ -1,0 +1,71 @@
+{
+  "task_id": "03_conflict_followup",
+  "scenario_id": "03_conflict_followup",
+  "question": "那如果按最新发布的版本执行，期限是多久？",
+  "status": "answered",
+  "planner": "mock",
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8,
+    "used_steps": 3,
+    "used_tool_calls": 2,
+    "exceeded": false,
+    "exceeded_reason": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D02",
+          "section_id": "D02-3.1"
+        },
+        "reason": "上下文追问：用户已指定按 D02《费用报销操作指引（2024 版）》执行；读取 D02 原文，指定制度与冲突条款都需要可核验引用"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D02/D02-3.1《提交时限》共 53 字"
+      },
+      "follow_up": "read_snippet：上下文追问：用户已指定按 D02《费用报销操作指引（2024 版）》执行；读取 D01 原文，指定制度与冲突条款都需要可核验引用",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D01",
+          "section_id": "D01-4.2"
+        },
+        "reason": "上下文追问：用户已指定按 D02《费用报销操作指引（2024 版）》执行；读取 D01 原文，指定制度与冲突条款都需要可核验引用"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D01/D01-4.2《报销时限》共 58 字"
+      },
+      "follow_up": "结束（answered）：已按用户指定制度读取原文并给出答案，冲突说明一并保留",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "answered",
+          "cited_docs": [
+            "D02",
+            "D01"
+          ]
+        },
+        "reason": "已按用户指定制度读取原文并给出答案，冲突说明一并保留"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=answered，引用 2 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ]
+}

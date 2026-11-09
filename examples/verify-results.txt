@@ -1,0 +1,11 @@
+[PASS] examples/01_vpn_normal/output.json: status=answered citations=1 supported=True conflict_detected=False acknowledged=True
+[PASS] examples/02_reimbursement_conflict/output.json: status=needs_clarification citations=2 supported=True conflict_detected=True acknowledged=True
+[PASS] examples/03_conflict_followup/output.json: status=answered citations=2 supported=True conflict_detected=True acknowledged=True
+[PASS] examples/04_receipt_lost_paraphrase/output.json: status=answered citations=1 supported=True conflict_detected=False acknowledged=True
+[PASS] examples/05_annual_leave_paraphrase/output.json: status=answered citations=1 supported=True conflict_detected=False acknowledged=True
+[PASS] examples/06_tool_fault_recovered/output.json: status=answered citations=1 supported=True conflict_detected=False acknowledged=True
+[PASS] examples/07_tool_fault_blocked/output.json: status=blocked citations=0 supported=True conflict_detected=False acknowledged=True
+[PASS] examples/08_budget_exceeded/output.json: status=incomplete_budget_exceeded citations=0 supported=True conflict_detected=False acknowledged=True
+[PASS] examples/09_corpus_swap_resolved/output.json: status=answered citations=3 supported=True conflict_detected=True acknowledged=True
+[PASS] examples/10_out_of_scope/output.json: status=insufficient_evidence citations=0 supported=True conflict_detected=False acknowledged=True
+[PASS] examples/11_replay_offline/output.json: status=answered citations=1 supported=True conflict_detected=False acknowledged=True

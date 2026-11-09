@@ -1,0 +1,19 @@
+{
+  "scenario_id": "11_replay_offline",
+  "title": "离线回放：用预记录决策走 OpenAI 兼容决策器（Mock 决策，仅验证闭环）",
+  "question": "VPN 账号多久需要重新认证？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "replay",
+  "replay": "data/replay/vpn_replay.json",
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [],
+  "coverage": [
+    "离线 Mock 入口",
+    "模型动作协议与引用审计"
+  ]
+}

@@ -1,0 +1,3 @@
+# 本项目只使用 Python 标准库（Python >= 3.9），无需安装第三方依赖。
+# 运行：python run.py corpus
+# 可选安装（生成 eqa 命令）：pip install -e .

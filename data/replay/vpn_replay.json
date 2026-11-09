@@ -1,0 +1,32 @@
+{
+  "note": "离线回放用决策序列：手写的 MOCK 决策，用于验证 OpenAI 兼容决策器的解析/执行/审计闭环，不代表真实模型输出。",
+  "decisions": [
+    {
+      "action": "search_docs",
+      "arguments": { "query": "VPN 账号多久需要重新认证？", "top_k": 5 },
+      "reason": "回放：第一步检索（与真实模型相同的动作格式）"
+    },
+    {
+      "action": "read_snippet",
+      "arguments": { "doc_id": "D05", "section_id": "D05-3.1" },
+      "reason": "回放：读取命中片段，取得逐字原文"
+    },
+    {
+      "action": "finish",
+      "arguments": {
+        "status": "answered",
+        "answer": "VPN 账号每 180 天需要重新认证一次（依据 D05-3.1）。",
+        "citations": [
+          {
+            "doc_id": "D05",
+            "section_id": "D05-3.1",
+            "quote": "VPN 账号每 180 天需要进行一次重新认证",
+            "supports": "直接回答"
+          }
+        ],
+        "evidence_gaps": []
+      },
+      "reason": "回放：已有可核验原文，结束"
+    }
+  ]
+}

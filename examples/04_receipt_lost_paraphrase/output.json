@@ -1,0 +1,177 @@
+{
+  "task_id": "04_receipt_lost_paraphrase",
+  "question": "报销的发票不小心弄没了还能报吗？",
+  "history": [],
+  "status": "answered",
+  "status_label": "已回答",
+  "answer": "根据《票据遗失与替代凭证处理说明》（D09，版本 2024-08-01）第 D09-1.1 节《发票遗失处理》：\n「发票或票据遗失时，可凭开票方提供的发票记账联复印件（加盖发票专用章）办理报销，并在报销单备注栏注明“票据遗失”。」\n结论：按原文执行：发票或票据遗失时，可凭开票方提供的发票记账联复印件（加盖发票专用章）办理报销，并在报销单备注栏注明“票据遗失”。",
+  "citations": [
+    {
+      "doc_id": "D09",
+      "title": "票据遗失与替代凭证处理说明",
+      "section_id": "D09-1.1",
+      "heading": "发票遗失处理",
+      "version_date": "2024-08-01",
+      "quote": "发票或票据遗失时，可凭开票方提供的发票记账联复印件（加盖发票专用章）办理报销，并在报销单备注栏注明“票据遗失”。",
+      "supports": "直接回答问题的条款"
+    }
+  ],
+  "evidence_gaps": [],
+  "conflicts": [],
+  "clarification": null,
+  "audit": {
+    "passed": true,
+    "citations": [
+      {
+        "doc_id": "D09",
+        "section_id": "D09-1.1",
+        "supported": true,
+        "reason": "原文逐字包含引用"
+      }
+    ],
+    "citations_supported": true,
+    "conflict": {
+      "detected": false,
+      "acknowledged": true,
+      "values": [],
+      "topic": ""
+    },
+    "notes": []
+  },
+  "run": {
+    "planner": "mock",
+    "model": null,
+    "corpus": "data/documents.json",
+    "budget": {
+      "max_steps": 10,
+      "max_tool_calls": 8,
+      "used_steps": 6,
+      "used_tool_calls": 5,
+      "exceeded": false,
+      "exceeded_reason": ""
+    },
+    "tool_calls": 5,
+    "elapsed_ms": 1,
+    "failures": [],
+    "notes": [
+      "D01/D01-4.3 已读取，但未命中『票据遗失处理』的证据词/取值，未作为答案依据",
+      "D01/D01-4.2 已读取，但未命中『票据遗失处理』的证据词/取值，未作为答案依据"
+    ]
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "报销的发票不小心弄没了还能报吗？",
+          "top_k": 5
+        },
+        "reason": "首轮检索：用用户问题原文查询，不预设有答案"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 15.75：D09(15.75)、D01(12.69)、D02(11.40)、D07(10.47)、D08(4.26)"
+      },
+      "follow_up": "search_docs：最高检索分 15.75 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "报销的发票不小心弄没了还能报吗？",
+          "top_k": 5,
+          "use_expansion": true
+        },
+        "reason": "最高检索分 15.75 低于改写阈值 30.00，改写检索（补充同义词/口语词）后重检，避免漏召回"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 53.18：D01(53.18)、D09(51.33)、D02(31.74)、D07(22.34)、D06(6.72)"
+      },
+      "follow_up": "read_snippet：命中文档 D01（53.19 分，最佳片段 D01-4.3），读取 D01-4.3 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D01",
+          "section_id": "D01-4.3"
+        },
+        "reason": "命中文档 D01（53.19 分，最佳片段 D01-4.3），读取 D01-4.3 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D01/D01-4.3《报销单据要求》共 61 字"
+      },
+      "follow_up": "read_snippet：命中文档 D01（53.19 分，最佳片段 D01-4.3），读取 D01-4.2 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 4,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D01",
+          "section_id": "D01-4.2"
+        },
+        "reason": "命中文档 D01（53.19 分，最佳片段 D01-4.3），读取 D01-4.2 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D01/D01-4.2《报销时限》共 58 字"
+      },
+      "follow_up": "read_snippet：命中文档 D09（51.33 分，最佳片段 D09-1.1），读取 D09-1.1 原文，确认是否直接回答该问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 5,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D09",
+          "section_id": "D09-1.1"
+        },
+        "reason": "命中文档 D09（51.33 分，最佳片段 D09-1.1），读取 D09-1.1 原文，确认是否直接回答该问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D09/D09-1.1《发票遗失处理》共 56 字"
+      },
+      "follow_up": "结束（answered）：已取得 D09/D09-1.1 的可核验原文且无未解决冲突，结束",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 6,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "answered",
+          "cited_docs": [
+            "D09"
+          ]
+        },
+        "reason": "已取得 D09/D09-1.1 的可核验原文且无未解决冲突，结束"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=answered，引用 1 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ],
+  "scenario": {
+    "id": "04_receipt_lost_paraphrase",
+    "title": "改写后的相似问题：发票弄没了怎么办",
+    "coverage": [
+      "改写后的相似问题",
+      "读取原文后判断证据不足再继续"
+    ],
+    "baseline": null
+  }
+}

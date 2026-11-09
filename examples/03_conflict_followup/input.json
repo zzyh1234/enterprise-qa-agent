@@ -1,0 +1,29 @@
+{
+  "scenario_id": "03_conflict_followup",
+  "title": "上下文追问：用户指定按最新版本执行",
+  "question": "那如果按最新发布的版本执行，期限是多久？",
+  "history": [
+    {
+      "role": "user",
+      "content": "报销期限是多久？"
+    },
+    {
+      "role": "assistant",
+      "content": "资料存在冲突，暂无法给出唯一答案（主题：报销期限）：\n- D02《费用报销操作指引（2024 版）》（版本 2024-06-15）第 D02-3.1 节：为配合月度结账，员工应在费用发生之日起 15 天内提交报销单据。\n- D01《员工费用报销管理规定》（版本 2024-03-01）第 D01-4.2 节：员工应当在费用发生之日起 30 个自然日内提交报销申请。\n以上文件均标注适用于「全体员工」，语料中未给出优先级或适用范围差异。\n查证情况：语料中没有制度解释类文档。\n请确认以哪份制度为准，或由制度归口部门解释后再答复。"
+    }
+  ],
+  "prior_scenario": "02_reimbursement_conflict",
+  "corpus": "data/documents.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [],
+  "coverage": [
+    "上下文追问",
+    "文档冲突",
+    "明确答案"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "scenario_id": "01_vpn_normal",
+  "title": "正常路径：单一文档给出明确答案",
+  "question": "VPN 账号多久需要重新认证？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [],
+  "coverage": [
+    "明确答案",
+    "引用文档 ID 与原文片段"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "scenario_id": "06_tool_fault_recovered",
+  "title": "工具失败后重试恢复：检索超时一次",
+  "question": "VPN 密码有什么要求？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "mock",
+  "replay": null,
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [
+    {
+      "tool": "search_docs",
+      "mode": "error",
+      "remaining": 1,
+      "message": "检索服务超时（模拟故障）"
+    }
+  ],
+  "coverage": [
+    "工具失败",
+    "明确答案"
+  ]
+}

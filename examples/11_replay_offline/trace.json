@@ -1,0 +1,70 @@
+{
+  "task_id": "11_replay_offline",
+  "scenario_id": "11_replay_offline",
+  "question": "VPN 账号多久需要重新认证？",
+  "status": "answered",
+  "planner": "replay",
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 8,
+    "used_steps": 3,
+    "used_tool_calls": 2,
+    "exceeded": false,
+    "exceeded_reason": ""
+  },
+  "steps": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 账号多久需要重新认证？",
+          "top_k": 5
+        },
+        "reason": "回放：第一步检索（与真实模型相同的动作格式）"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 44.31：D05(44.31)、D01(4.58)、D09(3.62)、D04(3.15)、D02(2.48)"
+      },
+      "follow_up": "read_snippet：回放：读取命中片段，取得逐字原文",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D05",
+          "section_id": "D05-3.1"
+        },
+        "reason": "回放：读取命中片段，取得逐字原文"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D05/D05-3.1《账号有效期与重新认证》共 54 字"
+      },
+      "follow_up": "结束（answered）：回放：已有可核验原文，结束",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "answered",
+          "cited_docs": [
+            "D05"
+          ]
+        },
+        "reason": "回放：已有可核验原文，结束"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=answered，引用 1 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ]
+}
