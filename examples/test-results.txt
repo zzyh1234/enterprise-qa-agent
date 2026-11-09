@@ -64,6 +64,6 @@ test_search_with_expansion_reports_added_terms (tests.test_tools.ToolTests.test_
 test_unknown_tool_is_rejected (tests.test_tools.ToolTests.test_unknown_tool_is_rejected) ... ok
 
 ----------------------------------------------------------------------
-Ran 64 tests in 1.513s
+Ran 64 tests in <elapsed>s
 
 OK
