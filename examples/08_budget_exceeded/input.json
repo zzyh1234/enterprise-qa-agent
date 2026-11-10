@@ -6,6 +6,8 @@
   "prior_scenario": null,
   "corpus": "data/documents.json",
   "planner": "mock",
+  "planner_requested": "mock",
+  "planner_fallback": false,
   "replay": null,
   "budget": {
     "max_steps": 5,

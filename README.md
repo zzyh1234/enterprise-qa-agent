@@ -3,9 +3,10 @@
 > 题目：企业知识问答 Agent —— 帮员工找到制度/产品问题的可靠答案，给出**文档 ID + 原文片段**，
 > 遇到**文档冲突**先查证、查证不了就**追问**，绝不凭常识编造；全流程有可复核的 Trace 与执行上限。
 
-实现方式：**Python 标准库原生 ReAct 循环**（不依赖任何 Agent 框架），
-默认使用离线 `mock` 决策器；另提供 OpenAI Chat Completions 兼容的**真实模型决策器**与**回放决策器**。
-所有业务工具、语料、故障注入、Trace、测试均在仓库内，可直接离线复现。
+实现方式：**Python 标准库原生 ReAct 循环**（不依赖任何 Agent 框架）。
+CLI 默认 `--planner openai`（由真实模型输出动作）；未配置 `EQA_API_KEY` 时自动回退到离线 `mock`，
+并在 `run.planner_requested / run.planner_fallback`、stderr 与 Trace 中明确标注。
+另提供 `replay` 回放入口。所有业务工具、语料、故障注入、Trace、测试均在仓库内。
 
 ---
 
@@ -25,28 +26,38 @@
 ## 2. 快速开始（无需安装第三方依赖）
 
 要求：Python >= 3.9（开发验证使用 Python 3.13），Windows / macOS / Linux 均可。
-不需要 API Key；默认 `mock` 决策器完全离线。
+
+默认 `--planner openai`（真实模型）；**没有 Key 也能跑**：会自动回退到离线 `mock`，
+并在 stderr、`run.planner_requested`、`run.planner_fallback`、`run.notes` 中明确标注。
+需要完全可复现的离线 Trace 时，显式加 `--planner mock`。
 
 ```powershell
 # 在仓库根目录执行
 python run.py corpus                     # 查看语料统计
-python run.py ask "VPN 账号多久需要重新认证？"
-python run.py ask "报销期限是多久？"      # 冲突 → 追问
-python run.py ask "那按最新发布的版本执行呢？" --context examples/02_reimbursement_conflict/output.json
-python run.py batch                      # 重跑全部 11 个场景，写入 examples/<id>/
+python run.py ask "VPN 账号多久需要重新认证？"        # 默认 openai；无 key 自动回退 mock 并提示
+python run.py ask "VPN 账号多久需要重新认证？" --planner mock   # 纯离线
+python run.py ask "报销期限是多久？" --planner mock             # 冲突 → 追问
+python run.py ask "那按最新发布的版本执行呢？" --context examples/02_reimbursement_conflict/output.json --planner mock
+python run.py batch --planner mock       # 离线重跑全部 11 个场景，写入 examples/<id>/
 python run.py verify "examples/*/output.json"   # 逐字引用 + 冲突说明审计
-python scripts/run_tests.py              # 64 个测试，结果写入 examples/test-results.txt
+python scripts/run_tests.py              # 67 个测试，结果写入 examples/test-results.txt
 ```
 
 可选（生成 `eqa` 命令）：`pip install -e .`
 
-### 用真实模型跑（可选，需要你自己的 key）
+### 用真实模型跑
 
 ```powershell
-$env:EQA_API_KEY = "sk-..."          # 不要提交到仓库
-$env:EQA_BASE_URL = "https://api.openai.com/v1"   # 任意 OpenAI 兼容网关
-$env:EQA_MODEL = "gpt-4o-mini"
-python run.py ask "报销期限是多久？" --planner openai --max-tool-calls 8
+$env:EQA_API_KEY = "sk-..."                       # 不要提交到仓库
+$env:EQA_BASE_URL = "https://api.openai.com/v1"   # 任意 OpenAI 兼容网关（可选）
+$env:EQA_MODEL = "gpt-4o-mini"                    # 可选
+
+python run.py ask "报销期限是多久？" --max-tool-calls 8
+python run.py ask "VPN 账号..." --no-fallback      # 无 key 时直接报错，避免误以为在跑真实模型
+
+# 用真实模型重新生成整套 Trace（先输出到 examples_openai/，复核后再替换 examples/）
+python run.py batch --planner openai --out examples_openai
+python run.py verify "examples_openai/*/output.json"
 ```
 
 模型只负责输出 JSON 动作（`search_docs` / `read_snippet` / `ask_user` / `finish`），
@@ -68,7 +79,8 @@ python run.py ask "报销期限是多久？" --planner openai --max-tool-calls 8
 | 执行上限 | `examples/08_budget_exceeded/` |
 | 资料外问题 | `examples/10_out_of_scope/` |
 | 引用是否真实 | `examples/verify-results.txt`（11 个输出全部 PASS） |
-| 测试是否真跑过 | `examples/test-results.txt`（`ran=64 failures=0 errors=0`） |
+| 测试是否真跑过 | `examples/test-results.txt`（`ran=67 failures=0 errors=0`） |
+| Trace 是真实模型还是规则 | 看 `output.json` 的 `run.planner`、`run.planner_requested`、`run.planner_fallback`；当前 examples 为 mock（本机无 key），真实模型生成命令见第 2 节 |
 
 ---
 
@@ -163,7 +175,7 @@ enterprise-qa-agent/
 │  ├─ query_expansions.json   # 同义词/口语改写词典
 │  ├─ scenarios.json          # 11 个评测场景
 │  └─ replay/vpn_replay.json  # 离线回放决策（Mock 决策，非真实模型输出）
-├─ tests/                     # 64 个 unittest（无第三方依赖）
+├─ tests/                     # 67 个 unittest（无第三方依赖）
 ├─ scripts/                   # 生成 v2 语料 / 检索分数 / 跑测试 / 审计示例
 ├─ examples/                  # 11 组 input / output / trace.json / trace.md + 测试与审计结果
 └─ docs/                      # 需求、方案、评测、AI 使用、复盘
@@ -177,6 +189,7 @@ enterprise-qa-agent/
 | --- | --- |
 | AI 辅助实现 + 自测（本次会话） | 约 3 小时（代码、语料、测试、示例、文档） |
 | 提交人实际用时 | 待提交人核对后填写（未记录则不填，勿虚报） |
+| examples/ Trace 来源 | 当前为 **mock**（本机无 API Key；`run.planner=mock`、`planner_fallback=true`）。真实模型需按第 2 节命令重跑并复核 |
 | 未完成 | 真实模型 API 未在本次环境调用（无 key）；审批流/权限/多租户/线上部署未做；评测集规模小（11 场景 / 8 篇文档，v2 为 9 篇） |
 | 刻意不做 | Web UI、多 Agent、向量数据库、生产级 Runtime（题目明确非必需） |
 

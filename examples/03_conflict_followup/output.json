@@ -95,7 +95,9 @@
     "failures": [],
     "notes": [
       "答案依据用户显式指定的 D02；制度层面的冲突仍未消解"
-    ]
+    ],
+    "planner_requested": "mock",
+    "planner_fallback": false
   },
   "trace": [
     {

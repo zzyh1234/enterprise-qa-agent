@@ -53,7 +53,9 @@
     "tool_calls": 2,
     "elapsed_ms": 0,
     "failures": [],
-    "notes": []
+    "notes": [],
+    "planner_requested": "replay",
+    "planner_fallback": false
   },
   "trace": [
     {

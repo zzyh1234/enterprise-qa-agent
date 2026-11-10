@@ -32,8 +32,11 @@ test_unacknowledged_conflict_downgrades_status (tests.test_audit.ModelGuardrailT
 test_ask_budget_flag (tests.test_cli.CliTests.test_ask_budget_flag) ... ok
 test_ask_json (tests.test_cli.CliTests.test_ask_json) ... ok
 test_batch_and_verify (tests.test_cli.CliTests.test_batch_and_verify) ... ok
+test_batch_openai_without_key_is_marked_as_fallback (tests.test_cli.CliTests.test_batch_openai_without_key_is_marked_as_fallback) ... ok
 test_context_followup_via_cli (tests.test_cli.CliTests.test_context_followup_via_cli) ... ok
 test_corpus_subcommand (tests.test_cli.CliTests.test_corpus_subcommand) ... ok
+test_default_planner_falls_back_without_key (tests.test_cli.CliTests.test_default_planner_falls_back_without_key) ... ok
+test_no_fallback_without_key_fails_fast (tests.test_cli.CliTests.test_no_fallback_without_key_fails_fast) ... ok
 test_build_planner_kinds (tests.test_planners.DecisionParsingTests.test_build_planner_kinds) ... ok
 test_finish_without_status_rejected (tests.test_planners.DecisionParsingTests.test_finish_without_status_rejected) ... ok
 test_invalid_action_rejected (tests.test_planners.DecisionParsingTests.test_invalid_action_rejected) ... ok
@@ -64,6 +67,6 @@ test_search_with_expansion_reports_added_terms (tests.test_tools.ToolTests.test_
 test_unknown_tool_is_rejected (tests.test_tools.ToolTests.test_unknown_tool_is_rejected) ... ok
 
 ----------------------------------------------------------------------
-Ran 64 tests in <elapsed>s
+Ran 67 tests in <elapsed>s
 
 OK

@@ -1,14 +1,14 @@
 # 04 AI 辅助说明
 
 > 本仓库在 AI（Cline）辅助下完成初版。提交前请提交人复核本文第 4 节的清单，
-> 并按实际情况填写用时与 GitHub 信息。AI 生成的代码已通过 64 个自动化测试和 11 个场景的引用审计，
+> 并按实际情况填写用时与 GitHub 信息。AI 生成的代码已通过 67 个自动化测试和 11 个场景的引用审计，
 > 但「测试通过」不等于「业务正确」，仍需人工抽查。
 
 ## 1. AI 参与的部分
 
 | 部分 | AI 做了什么 | 人工需要确认什么 |
 | --- | --- | --- |
-| 需求拆解 | 把题目中的验收点拆成 11 个可运行场景与 64 个断言 | 验收点是否有遗漏、场景是否符合真实业务 |
+| 需求拆解 | 把题目中的验收点拆成 11 个可运行场景与 67 个断言 | 验收点是否有遗漏、场景是否符合真实业务 |
 | 语料 | 编写合成的制度/FAQ（8 篇文档、冲突对 D01/D02、v2 的 D03） | 制度措辞、版本号、适用范围是否合理 |
 | 代码 | 原生 ReAct 循环、BM25+改写、两个工具、三种 Planner、审计、CLI、runner | 是否有安全/合规问题；异常路径是否可接受 |
 | 测试 | unittest 全量覆盖（含用假 transport 驱动的真实模型协议循环） | 断言是否过拟合当前语料 |
@@ -44,8 +44,12 @@
 ## 4. 提交前请人工确认（必须）
 
 - [ ] README 第 8 节的「提交人实际用时」按真实情况填写，不要照抄 AI 估计。
-- [ ] 运行一遍：`python scripts/run_tests.py`、`python run.py batch`、`python scripts/verify_examples.py`，
-      确认与文档中的数字一致（应为 64 / 11 / 11 PASS）。
+- [ ] 运行一遍：`python scripts/run_tests.py`、`python run.py batch --planner mock`、`python scripts/verify_examples.py`，
+      确认与文档中的数字一致（应为 67 / 11 / 11 PASS）。
+- [ ] 如你有模型 API Key：执行 `python run.py batch --planner openai --out examples_openai`，
+      复核 `run.planner=openai`、11 个场景状态与 `verify` 全 PASS 后，再替换 `examples/`，
+      并把 `SUBMISSION.md`、`docs/03-evaluation.md` 中的「当前 Trace 来源」改为真实模型。
+      **没有真实运行就不要把 mock Trace 写成 openai Trace。**
 - [ ] 抽查 2 条引用：打开 `data/documents.json` 对应片段，确认 `quote` 逐字一致。
 - [ ] 如你有模型 API Key，可补一条真实模型运行记录（`--planner openai`），并在 `docs/03` 中注明；
       若无，请保留「未验证真实模型」的声明，不要删除。

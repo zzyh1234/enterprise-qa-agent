@@ -6,6 +6,8 @@
   "prior_scenario": null,
   "corpus": "data/documents.json",
   "planner": "replay",
+  "planner_requested": "replay",
+  "planner_fallback": false,
   "replay": "data/replay/vpn_replay.json",
   "budget": {
     "max_steps": 8,

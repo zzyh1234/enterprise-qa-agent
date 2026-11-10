@@ -114,9 +114,11 @@
       "exceeded_reason": ""
     },
     "tool_calls": 6,
-    "elapsed_ms": 1,
+    "elapsed_ms": 2,
     "failures": [],
-    "notes": []
+    "notes": [],
+    "planner_requested": "mock",
+    "planner_fallback": false
   },
   "trace": [
     {

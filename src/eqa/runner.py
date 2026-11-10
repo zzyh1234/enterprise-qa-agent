@@ -105,6 +105,10 @@ def write_example(
         "prior_scenario": scenario.get("history_from"),
         "corpus": scenario.get("corpus", "data/documents.json"),
         "planner": scenario.get("planner", "mock"),
+        "planner_requested": scenario.get(
+            "planner_requested", scenario.get("planner", "mock")
+        ),
+        "planner_fallback": bool(scenario.get("planner_fallback", False)),
         "replay": scenario.get("replay"),
         "budget": scenario.get("budget"),
         "tool_faults": scenario.get("tool_faults", []),
@@ -114,6 +118,12 @@ def write_example(
         json.dumps(input_payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     output_payload = dict(payload)
+    run_info = dict(output_payload.get("run") or {})
+    run_info["planner_requested"] = scenario.get(
+        "planner_requested", scenario.get("planner", "mock")
+    )
+    run_info["planner_fallback"] = bool(scenario.get("planner_fallback", False))
+    output_payload["run"] = run_info
     output_payload["scenario"] = {
         "id": scenario["id"],
         "title": scenario.get("title", ""),
@@ -149,13 +159,20 @@ def render_trace_markdown(payload: Dict[str, Any], scenario: Dict[str, Any]) -> 
     run = payload.get("run", {})
     budget = run.get("budget") or {}
     audit = payload.get("audit") or {}
+    planner_line = f"- Planner：`{run.get('planner')}`"
+    if run.get("planner_fallback"):
+        planner_line += (
+            f"（请求 `{run.get('planner_requested')}`，未配置 EQA_API_KEY，已回退到离线 mock）"
+        )
+    elif run.get("planner_requested") and run.get("planner_requested") != run.get("planner"):
+        planner_line += f"（请求 `{run.get('planner_requested')}`）"
     lines = [
         f"# Trace：{scenario['id']}",
         "",
         f"- 标题：{scenario.get('title', '')}",
         f"- 问题：{payload.get('question', '')}",
         f"- 状态：`{payload.get('status')}`（{payload.get('status_label', '')}）",
-        f"- Planner：`{run.get('planner')}`",
+        planner_line,
         f"- 语料：`{run.get('corpus')}`",
         f"- 预算：步数 {budget.get('used_steps')}/{budget.get('max_steps')}，"
         f"工具调用 {budget.get('used_tool_calls')}/{budget.get('max_tool_calls')}",
@@ -216,6 +233,12 @@ def render_result_text(payload: Dict[str, Any]) -> str:
         f"任务：{payload.get('task_id')}",
         f"问题：{payload.get('question')}",
         f"状态：{payload.get('status')}（{payload.get('status_label')}）",
+        "决策器：" + str(run.get("planner") or "")
+        + (
+            f"（回退：请求 {run.get('planner_requested')}，未配置 key）"
+            if run.get("planner_fallback")
+            else ""
+        ),
         "",
         "答案：",
         payload.get("answer", ""),

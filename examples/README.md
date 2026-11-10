@@ -4,17 +4,22 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `input.json` | 场景 ID、问题、历史、语料、planner、预算、故障注入、覆盖的验收点 |
+| `input.json` | 场景 ID、问题、历史、语料、planner（含 `planner_requested / planner_fallback`）、预算、故障注入、覆盖的验收点 |
 | `output.json` | 完整结果：status / answer / citations / gaps / conflicts / clarification / audit / run / trace |
 | `trace.json` | 仅执行步骤（决策依据、动作、参数、观察、后续动作） |
-| `trace.md` | 人类可读的 Trace 表格 + 答案 + 引用 + 缺口 |
-| `test-results.txt`（根目录） | 64 个 unittest 的实际输出：`ran=64 failures=0 errors=0` |
+| `trace.md` | 人类可读的 Trace 表格 + 答案 + 引用 + 缺口 + 决策器来源 |
+| `test-results.txt`（根目录） | 67 个 unittest 的实际输出：`ran=67 failures=0 errors=0` |
 | `verify-results.txt`（根目录） | 对全部 `output.json` 的逐字引用/冲突审计：11 个 `[PASS]` |
+
+> **当前 Trace 来源**：本机没有 API Key，11 个示例均由 `--planner mock` 生成，
+> 因此 `output.json` 中 `run.planner=mock`、`run.planner_requested=mock`、`run.planner_fallback=false`。
+> CLI 的默认值是 `--planner openai`；未配置 key 时会自动回退并标注。
+> 生成真实模型 Trace：`python run.py batch --planner openai --out examples_openai`，复核后再替换本目录。
 
 生成/刷新命令：
 
 ```powershell
-python run.py batch                 # 重新生成 11 个目录
+python run.py batch --planner mock   # 重新生成 11 个目录（离线可复现）
 python scripts/run_tests.py         # 重新生成 test-results.txt
 python scripts/verify_examples.py   # 重新生成 verify-results.txt
 ```
@@ -79,7 +84,8 @@ python scripts/verify_examples.py   # 重新生成 verify-results.txt
 - `11_replay_offline` 使用 `data/replay/vpn_replay.json` 中**手写的 Mock 决策**，
   目的是验证 OpenAI 兼容决策器的解析、执行、引用审计闭环（真实调用需要 Key）。
 - 回放**不会**根据工具结果动态调整，除非回放序列已经写了下一步；它不能作为「模型决策能力」的证据。
-- 默认 `mock` Planner 是规则决策器，能体现「根据结果调整动作」，但同样**不代表真实模型**。
+- CLI 默认请求 `openai`；未配置 key 时自动回退到 `mock`（`run.planner_fallback=true`，stderr 与 Trace 都会提示）。
+  `mock` 是规则决策器，能体现「根据结果调整动作」，但同样**不代表真实模型**。
 
 ## 5. 单条结果怎么看
 

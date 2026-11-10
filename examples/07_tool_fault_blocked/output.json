@@ -41,7 +41,9 @@
     "failures": [
       "read_snippet: 片段读取服务不可用（模拟故障）"
     ],
-    "notes": []
+    "notes": [],
+    "planner_requested": "mock",
+    "planner_fallback": false
   },
   "trace": [
     {

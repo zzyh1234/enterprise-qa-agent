@@ -6,7 +6,7 @@
 结果文件：`examples/test-results.txt`
 
 ```
-ran=64 failures=0 errors=0 skipped=0 -> OK
+ran=67 failures=0 errors=0 skipped=0 -> OK
 ```
 
 | 测试模块 | 数量 | 覆盖内容 |
@@ -17,7 +17,7 @@ ran=64 failures=0 errors=0 skipped=0 -> OK
 | `tests/test_agent_flows.py` | 15 | 11 个场景的端到端断言 + 预算不越界 + 引用逐字 + 两处「改内容→改答案」 |
 | `tests/test_audit.py` | 7 | 引用逐字/篡改/不存在文档、冲突说明、Mock 与「模型输出」的审计降级 |
 | `tests/test_planners.py` | 14 | JSON 解析与非法动作、真实模型协议循环（假 transport）、纠正、失败、回放 |
-| `tests/test_cli.py` | 5 | `ask --json`、`--max-tool-calls`、`batch`、`verify`、`--context` 追问、`corpus` |
+| `tests/test_cli.py` | 8 | `ask --json`、`--max-tool-calls`、`batch`、`verify`、`--context` 追问、`corpus`、默认 openai 无 key 回退、`--no-fallback` 快速失败、batch 回退标注 |
 
 引用/冲突审计的独立复核：`python scripts/verify_examples.py` → `examples/verify-results.txt`，
 11 个输出全部 `[PASS]`。
@@ -103,7 +103,8 @@ ran=64 failures=0 errors=0 skipped=0 -> OK
 
 | 项目 | 现状 | 影响 / 后续 |
 | --- | --- | --- |
-| 真实模型效果 | **未调用真实 API**（环境无 Key）。只验证了协议循环、JSON 校验、审计兜底 | README/文档均标注；有 Key 时 `--planner openai` 可直接跑，但效果需另行评测 |
+| 真实模型效果 | **未调用真实 API**（环境无 Key）。只验证了协议循环、JSON 校验、审计兜底 | README/文档均标注；有 Key 时 `python run.py batch --planner openai --out examples_openai` 可直接生成真实 Trace，但效果需另行评测 |
+| examples/ Trace 来源 | 当前 11 个示例由 **mock** 生成（本机无 key），`run.planner=mock`、`planner_fallback=true` | 不能当作真实模型决策证据；配置 key 后重跑、复核审计，再替换 `examples/` 并更新本文档 |
 | Mock 决策器 | 规则化，只能证明「流程与护栏」成立，不能证明「模型会这样决策」 | 不作为真实模型能力证据 |
 | 检索阈值 | 15 / 30 / 60 是基于 8 篇文档、11 个问题校准的 | 扩充语料后需用 `scripts/inspect_retrieval.py` 重新校准；生产应改向量 + rerank |
 | 同义词表 | 约 20 条口语映射 | 未覆盖全部口语/方言；改写失败会退回「资料不足」而不是乱答 |
@@ -133,15 +134,17 @@ ran=64 failures=0 errors=0 skipped=0 -> OK
 # 1) 看语料
 python run.py corpus
 
-# 2) 单问题（含冲突）
+# 2) 单问题（默认 openai；无 key 自动回退 mock，并在 run 中标明）
 python run.py ask "报销期限是多久？"
+python run.py ask "报销期限是多久？" --planner mock --json
 python run.py ask "报销期限是多久？" --json
 
 # 3) 上下文追问（先跑 02 或直接引用仓库内示例）
-python run.py ask "那按最新发布的版本执行呢？" --context examples/02_reimbursement_conflict/output.json
+python run.py ask "那按最新发布的版本执行呢？" --context examples/02_reimbursement_conflict/output.json --planner mock
 
 # 4) 全量场景与审计
-python run.py batch
+python run.py batch --planner mock              # 离线可复现
+python run.py batch --planner openai --out examples_openai   # 真实模型（需 key）
 python scripts/verify_examples.py
 
 # 5) 测试

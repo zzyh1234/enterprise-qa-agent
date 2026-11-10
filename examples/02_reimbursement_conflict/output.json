@@ -110,11 +110,13 @@
       "exceeded_reason": ""
     },
     "tool_calls": 5,
-    "elapsed_ms": 1,
+    "elapsed_ms": 2,
     "failures": [],
     "notes": [
       "查证：语料中没有制度解释类文档"
-    ]
+    ],
+    "planner_requested": "mock",
+    "planner_fallback": false
   },
   "trace": [
     {

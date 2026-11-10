@@ -13,9 +13,19 @@ from tests.support import ROOT
 
 
 class CliTests(unittest.TestCase):
-    def run_cli(self, *args: str, timeout: int = 120) -> subprocess.CompletedProcess:
+    def run_cli(
+        self,
+        *args: str,
+        timeout: int = 120,
+        env_overrides: dict | None = None,
+    ) -> subprocess.CompletedProcess:
         env = dict(os.environ)
         env["PYTHONIOENCODING"] = "utf-8"
+        for key, value in (env_overrides or {}).items():
+            if value is None:
+                env.pop(key, None)
+            else:
+                env[key] = str(value)
         return subprocess.run(
             [sys.executable, str(ROOT / "run.py"), *args],
             cwd=str(ROOT),
@@ -28,7 +38,7 @@ class CliTests(unittest.TestCase):
         )
 
     def test_ask_json(self) -> None:
-        proc = self.run_cli("ask", "VPN 账号多久需要重新认证？", "--json")
+        proc = self.run_cli("ask", "VPN 账号多久需要重新认证？", "--planner", "mock", "--json")
         self.assertEqual(proc.returncode, 0, proc.stderr)
         payload = json.loads(proc.stdout)
         self.assertEqual(payload["status"], "answered")
@@ -37,7 +47,13 @@ class CliTests(unittest.TestCase):
 
     def test_ask_budget_flag(self) -> None:
         proc = self.run_cli(
-            "ask", "云盘免费版单文件上传上限是多少？", "--max-tool-calls", "1", "--json"
+            "ask",
+            "云盘免费版单文件上传上限是多少？",
+            "--planner",
+            "mock",
+            "--max-tool-calls",
+            "1",
+            "--json",
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         payload = json.loads(proc.stdout)
@@ -67,13 +83,65 @@ class CliTests(unittest.TestCase):
             context = pathlib.Path(tmp) / "02_reimbursement_conflict" / "output.json"
             self.assertTrue(context.exists())
             proc = self.run_cli(
-                "ask", "那按最新发布的版本执行呢？", "--context", str(context), "--json"
+                "ask",
+                "那按最新发布的版本执行呢？",
+                "--context",
+                str(context),
+                "--planner",
+                "mock",
+                "--json",
             )
             self.assertEqual(proc.returncode, 0, proc.stderr)
             payload = json.loads(proc.stdout)
             self.assertEqual(payload["status"], "answered")
             self.assertIn("15", payload["answer"])
             self.assertIn("30", payload["answer"])
+
+    def test_default_planner_falls_back_without_key(self) -> None:
+        proc = self.run_cli(
+            "ask",
+            "VPN 账号多久需要重新认证？",
+            "--json",
+            env_overrides={"EQA_API_KEY": None, "EQA_BASE_URL": None, "EQA_MODEL": None},
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        payload = json.loads(proc.stdout)
+        self.assertEqual(payload["run"]["planner"], "mock")
+        self.assertEqual(payload["run"]["planner_requested"], "openai")
+        self.assertTrue(payload["run"]["planner_fallback"])
+        self.assertIn("回退", proc.stderr)
+        self.assertTrue(any("回退" in note for note in payload["run"]["notes"]))
+
+    def test_no_fallback_without_key_fails_fast(self) -> None:
+        proc = self.run_cli(
+            "ask",
+            "VPN 账号多久需要重新认证？",
+            "--json",
+            "--no-fallback",
+            env_overrides={"EQA_API_KEY": None, "EQA_BASE_URL": None, "EQA_MODEL": None},
+        )
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("EQA_API_KEY", proc.stderr)
+
+    def test_batch_openai_without_key_is_marked_as_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = self.run_cli(
+                "batch",
+                "--only",
+                "01_vpn_normal",
+                "--out",
+                tmp,
+                "--planner",
+                "openai",
+                env_overrides={"EQA_API_KEY": None, "EQA_BASE_URL": None, "EQA_MODEL": None},
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            output = pathlib.Path(tmp) / "01_vpn_normal" / "output.json"
+            payload = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(payload["run"]["planner"], "mock")
+            self.assertEqual(payload["run"]["planner_requested"], "openai")
+            self.assertTrue(payload["run"]["planner_fallback"])
+            self.assertIn("planner_requested", (pathlib.Path(tmp) / "01_vpn_normal" / "input.json").read_text(encoding="utf-8"))
 
     def test_corpus_subcommand(self) -> None:
         proc = self.run_cli("corpus")

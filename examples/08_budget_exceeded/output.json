@@ -43,7 +43,9 @@
     ],
     "notes": [
       "计划中的下一步：read_snippet（预算不足未执行）"
-    ]
+    ],
+    "planner_requested": "mock",
+    "planner_fallback": false
   },
   "trace": [
     {

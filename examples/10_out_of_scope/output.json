@@ -38,9 +38,11 @@
       "exceeded_reason": ""
     },
     "tool_calls": 1,
-    "elapsed_ms": 0,
+    "elapsed_ms": 1,
     "failures": [],
-    "notes": []
+    "notes": [],
+    "planner_requested": "mock",
+    "planner_fallback": false
   },
   "trace": [
     {

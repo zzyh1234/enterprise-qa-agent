@@ -16,8 +16,8 @@
                                             │                │
                     ┌───────────────────────▼──┐      ┌──────▼─────────────────────┐
                     │ Planner（可插拔）          │      │ KnowledgeTools             │
-                    │ ・MockPlanner（离线规则）   │      │ ・search_docs（BM25+改写）  │
-                    │ ・OpenAI 兼容（真实模型）   │      │ ・read_snippet（逐字原文）  │
+                    │ ・MockPlanner（离线/回退）   │      │ ・search_docs（BM25+改写）  │
+                    │ ・OpenAI 兼容（默认）        │      │ ・read_snippet（逐字原文）  │
                     │ ・Replay（回放决策）        │      │ ・故障注入（error/empty）   │
                     └───────────┬──────────────┘      └──────┬─────────────────────┘
                                 │ Decision                   │
