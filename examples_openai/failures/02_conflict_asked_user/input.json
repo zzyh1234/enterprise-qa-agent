@@ -1,0 +1,21 @@
+{
+  "scenario_id": "02_conflict_asked_user",
+  "title": "真实本地模型（qwen2.5:3b）：发现两份文档后把比较工作推给用户",
+  "question": "报销期限是多久？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "openai",
+  "planner_requested": "openai",
+  "planner_fallback": false,
+  "replay": null,
+  "budget": {
+    "max_steps": 8,
+    "max_tool_calls": 6
+  },
+  "tool_faults": [],
+  "coverage": [
+    "真实模型失败样本",
+    "未读取 D01 即追问"
+  ]
+}

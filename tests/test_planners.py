@@ -193,7 +193,11 @@ class OpenAIProtocolLoopTests(unittest.TestCase):
 class ReplayPlannerTests(unittest.TestCase):
     def test_replay_runs_recorded_actions(self) -> None:
         decisions = [
-            {"action": "search_docs", "arguments": {"query": "VPN 账号"}, "reason": "回放：检索"},
+            {
+                "action": "search_docs",
+                "arguments": {"query": "VPN 账号多久需要重新认证？"},
+                "reason": "回放：检索",
+            },
             {
                 "action": "read_snippet",
                 "arguments": {"doc_id": "D05", "section_id": "D05-3.1"},

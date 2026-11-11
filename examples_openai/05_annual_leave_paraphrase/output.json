@@ -1,0 +1,125 @@
+{
+  "task_id": "05_annual_leave_paraphrase",
+  "question": "我工作六年了，一年能休几天带薪假？",
+  "history": [],
+  "status": "answered",
+  "status_label": "已回答",
+  "answer": "员工累计工作满 1 年不满 10 年的，年休假 5 天；满 10 年不满 20 年的，年休假 10 天；满 20 年的，年休假 15 天。",
+  "citations": [
+    {
+      "doc_id": "D04",
+      "title": "员工带薪年假管理办法",
+      "section_id": "D04-2.1",
+      "heading": "年休假天数",
+      "version_date": "2024-01-10",
+      "quote": "员工累计工作满 1 年不满 10 年的，年休假 5 天；满 10 年不满 20 年的，年休假 10 天；满 20 年的，年休假 15 天。",
+      "supports": "['D04-2.1']"
+    }
+  ],
+  "evidence_gaps": [],
+  "conflicts": [],
+  "clarification": null,
+  "audit": {
+    "passed": true,
+    "citations": [
+      {
+        "doc_id": "D04",
+        "section_id": "D04-2.1",
+        "supported": true,
+        "reason": "原文逐字包含引用"
+      }
+    ],
+    "citations_supported": true,
+    "conflict": {
+      "detected": false,
+      "acknowledged": true,
+      "values": [],
+      "topic": ""
+    },
+    "notes": []
+  },
+  "run": {
+    "planner": "openai",
+    "model": "qwen2.5:3b",
+    "corpus": "data/documents.json",
+    "budget": {
+      "max_steps": 10,
+      "max_tool_calls": 8,
+      "used_steps": 3,
+      "used_tool_calls": 2,
+      "exceeded": false,
+      "exceeded_reason": ""
+    },
+    "tool_calls": 2,
+    "elapsed_ms": 11861,
+    "failures": [],
+    "notes": [],
+    "planner_requested": "openai",
+    "planner_fallback": false
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "工作六年 带薪假 天数",
+          "top_k": 5,
+          "use_expansion": true
+        },
+        "reason": "先检索可能涉及带薪假天数的文档"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 63.51：D04(63.51)、D08(8.34)、D02(4.54)、D05(3.35)、D06(2.73)"
+      },
+      "follow_up": "read_snippet：先读 D04/D04-2.1 文档的年休假天数部分",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D04",
+          "section_id": "D04-2.1"
+        },
+        "reason": "先读 D04/D04-2.1 文档的年休假天数部分"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D04/D04-2.1《年休假天数》共 69 字"
+      },
+      "follow_up": "结束（answered）：已读取并引用了包含答案的文档段落",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "answered",
+          "cited_docs": [
+            "D04"
+          ]
+        },
+        "reason": "已读取并引用了包含答案的文档段落"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=answered，引用 1 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ],
+  "scenario": {
+    "id": "05_annual_leave_paraphrase",
+    "title": "检索改进 + 相似问法：工作六年能休几天带薪假",
+    "coverage": [
+      "改写后的相似问题",
+      "检索改进"
+    ],
+    "baseline": null
+  }
+}

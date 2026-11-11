@@ -32,7 +32,14 @@ from .models import (
     ToolResult,
     TraceStep,
 )
-from .planners import Decision, Observation, PlannerError, PlannerInput, build_planner
+from .planners import (
+    SEARCH_CANDIDATE_MIN_SCORE,
+    Decision,
+    Observation,
+    PlannerError,
+    PlannerInput,
+    build_planner,
+)
 from .retrieval import QueryExpander, RetrievalIndex
 from .tools import KnowledgeTools
 
@@ -75,6 +82,8 @@ class KnowledgeQAAgent:
         steps: List[TraceStep] = []
         observations: List[Observation] = []
         self._read_sections: List[tuple] = []
+        self._search_candidates: List[tuple] = []
+        self._best_search_score: Optional[float] = None
         started = time.perf_counter()
         planner_errors = 0
         task_id = task_id or f"task-{uuid.uuid4().hex[:10]}"
@@ -190,6 +199,23 @@ class KnowledgeQAAgent:
                 section_id = str(payload.get("section_id", ""))
                 if doc_id and section_id:
                     self._read_sections.append((doc_id, section_id))
+            if decision.action == "search_docs" and tool_result.ok:
+                hits = (tool_result.payload or {}).get("hits", []) or []
+                if hits:
+                    top = float(hits[0].get("score") or 0.0)
+                    if self._best_search_score is None or top > self._best_search_score:
+                        self._best_search_score = top
+                for hit in hits:
+                    doc_id = str(hit.get("doc_id", ""))
+                    section_id = str(hit.get("section_id", ""))
+                    score = float(hit.get("score") or 0.0)
+                    if (
+                        doc_id
+                        and section_id
+                        and score >= SEARCH_CANDIDATE_MIN_SCORE
+                        and (doc_id, section_id) not in self._search_candidates
+                    ):
+                        self._search_candidates.append((doc_id, section_id))
 
     # ------------------------------------------------------------ 结束处理
     def _finish_from_payload(
@@ -204,7 +230,7 @@ class KnowledgeQAAgent:
     ) -> AgentResult:
         payload = dict(decision.arguments or {})
         status = str(payload.get("status") or STATUS_ANSWERED).strip()
-        gaps = [str(item) for item in payload.get("evidence_gaps") or []]
+        gaps = self._as_text_list(payload.get("evidence_gaps"))
         if status not in STATUS_LABELS:
             gaps.append(f"返回了未知状态 {status!r}，按失败处理")
             status = STATUS_FAILED
@@ -214,8 +240,8 @@ class KnowledgeQAAgent:
             gaps.append("缺少答案文本")
         citations = [self._coerce_citation(item) for item in payload.get("citations") or []]
         conflicts = [self._coerce_conflict(item) for item in payload.get("conflicts") or []]
-        notes = [str(item) for item in payload.get("notes") or []]
-        failures = [str(item) for item in payload.get("failures") or []]
+        notes = self._as_text_list(payload.get("notes"))
+        failures = self._as_text_list(payload.get("failures"))
         clarification = self._coerce_clarification(payload.get("clarification"))
         steps.append(
             TraceStep(
@@ -273,9 +299,9 @@ class KnowledgeQAAgent:
         )
         result = self._build_result(
             task_id, question, history, STATUS_NEEDS_CLARIFICATION, answer, citations, conflicts,
-            [str(item) for item in payload.get("evidence_gaps") or []],
-            [str(item) for item in payload.get("notes") or []],
-            [str(item) for item in payload.get("failures") or []],
+            self._as_text_list(payload.get("evidence_gaps")),
+            self._as_text_list(payload.get("notes")),
+            self._as_text_list(payload.get("failures")),
             clarification, steps, budget, started,
         )
         return self._apply_audit(result)
@@ -413,7 +439,17 @@ class KnowledgeQAAgent:
             return source
 
     def _coerce_citation(self, raw: Any) -> Citation:
-        item = dict(raw or {})
+        if not isinstance(raw, dict):
+            return Citation(
+                doc_id="",
+                title="",
+                section_id="",
+                heading="",
+                version_date="",
+                quote=str(raw or ""),
+                supports="格式非法的引用（已拒绝）",
+            )
+        item = dict(raw)
         doc_id = str(item.get("doc_id", "") or "")
         section_id = str(item.get("section_id", "") or "")
         doc = self.corpus.get(doc_id)
@@ -429,10 +465,19 @@ class KnowledgeQAAgent:
         )
 
     def _coerce_conflict(self, raw: Any) -> Conflict:
-        item = dict(raw or {})
+        if not isinstance(raw, dict):
+            return Conflict(
+                topic="",
+                values=[],
+                resolution="unresolved",
+                note=f"模型返回了格式非法的冲突描述（已忽略）：{str(raw)[:200]}",
+            )
+        item = dict(raw)
         values: List[ConflictValue] = []
         for raw_value in item.get("values") or []:
-            value = dict(raw_value or {})
+            if not isinstance(raw_value, dict):
+                continue
+            value = dict(raw_value)
             doc = self.corpus.get(str(value.get("doc_id", "")))
             section = doc.section(str(value.get("section_id", ""))) if doc else None
             values.append(
@@ -454,18 +499,37 @@ class KnowledgeQAAgent:
         )
 
     @staticmethod
+    def _as_text_list(raw: Any) -> List[str]:
+        if not raw:
+            return []
+        if isinstance(raw, str):
+            return [raw]
+        if isinstance(raw, (list, tuple)):
+            return [str(item) for item in raw]
+        return [str(raw)]
+
+    @staticmethod
     def _coerce_clarification(raw: Any) -> Optional[Clarification]:
         if not raw:
             return None
         if isinstance(raw, str):
             return Clarification(question=raw)
+        if not isinstance(raw, dict):
+            return None
         item = dict(raw)
         question = str(item.get("question") or "")
         if not question:
             return None
+        raw_options = item.get("options")
+        if isinstance(raw_options, (list, tuple)):
+            options = [str(option) for option in raw_options]
+        elif raw_options:
+            options = [str(raw_options)]
+        else:
+            options = []
         return Clarification(
             question=question,
-            options=[str(item) for item in item.get("options") or []],
+            options=options,
             reason=str(item.get("reason") or ""),
         )
 
@@ -486,6 +550,15 @@ class KnowledgeQAAgent:
             return result
 
         problems = list(audit["notes"])
+        problems.extend(self._unverified_conflicts(result, contextual))
+        if (
+            self._best_search_score is not None
+            and self._best_search_score < SEARCH_CANDIDATE_MIN_SCORE
+        ):
+            problems.append(
+                f"检索置信度不足（最高分 {self._best_search_score:.2f} < "
+                f"{SEARCH_CANDIDATE_MIN_SCORE:.0f}），不接受 answered"
+            )
         if not result.citations:
             problems.append("状态为 answered/partial 但没有提供任何逐字引用")
         if problems:
@@ -496,6 +569,44 @@ class KnowledgeQAAgent:
             result.answer += f"\n\n【审计未通过】{note}。该答案不可采信，需人工复核。"
             result.evidence_gaps.extend(dict.fromkeys(problems))
         return result
+
+    def _unverified_conflicts(self, result: AgentResult, question: str) -> List[str]:
+        """检索到高分文档但从未读取，且其取值与已引用条款不同 → 不能算已回答。
+
+        这是对「模型只读了其中一份就下结论」的确定性兜底：
+        即使引用本身逐字正确，只要存在未核实的高分不同取值，就不接受 answered。
+        """
+        intent = self.matcher.detect(question)
+        if intent is None or not intent.value_patterns or not result.citations:
+            return []
+        read = set(getattr(self, "_read_sections", ()))
+        cited_docs = {citation.doc_id for citation in result.citations}
+        cited_values = set()
+        for citation in result.citations:
+            doc = self.corpus.get(citation.doc_id)
+            section = doc.section(citation.section_id) if doc else None
+            if doc is not None and section is not None:
+                cited_values.update(value for value, _ in intent.extract_values(section.text))
+        if not cited_values:
+            return []
+
+        notes: List[str] = []
+        for doc_id, section_id in getattr(self, "_search_candidates", ()):
+            if doc_id in cited_docs or (doc_id, section_id) in read:
+                continue
+            doc = self.corpus.get(doc_id)
+            section = doc.section(section_id) if doc else None
+            if doc is None or section is None or not intent.has_strong_evidence(section.text):
+                continue
+            differing = sorted(
+                {value for value, _ in intent.extract_values(section.text)} - cited_values
+            )
+            if differing:
+                notes.append(
+                    f"存在未核实的潜在冲突：{doc_id}/{section_id} 含不同取值 "
+                    f"{'、'.join(differing)}，但本次未读取核实"
+                )
+        return notes
 
     @staticmethod
     def _link_follow_ups(steps: List[TraceStep]) -> None:

@@ -1,0 +1,21 @@
+{
+  "scenario_id": "04_receipt_lost_paraphrase",
+  "title": "改写后的相似问题：发票弄没了怎么办",
+  "question": "报销的发票不小心弄没了还能报吗？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "openai",
+  "planner_requested": "openai",
+  "planner_fallback": false,
+  "replay": null,
+  "budget": {
+    "max_steps": 10,
+    "max_tool_calls": 8
+  },
+  "tool_faults": [],
+  "coverage": [
+    "改写后的相似问题",
+    "读取原文后判断证据不足再继续"
+  ]
+}

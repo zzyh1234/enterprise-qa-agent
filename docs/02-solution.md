@@ -145,6 +145,8 @@
 | 引用逐字 | 引用去空白后必须是原文子串；文档/片段必须存在 | `status=audit_failed`，答案附加「不可采信」 |
 | 引用非空 | `answered` / `partial` 必须至少 1 条引用（禁止凭记忆作答） | 同上 |
 | 冲突说明 | 引用之间、以及**本次运行已读过的片段**之间若存在不同取值，答案必须包含全部取值 | 同上，并记录 `missing_in_answer` |
+| 未读高分候选 | 检索命中 ≥15 分但从未读取，且能抽出与引用不同的取值 → 视为“潜在冲突未核实” | 同上；失败样本见 `examples_openai/failures/02_conflict_asked_user` |
+| 检索置信度 | 本次所有检索的最高分 < 15 → 不接受 `answered` | 同上；真实模型越界硬答被拦下的记录见 `examples_openai/failures/10_out_of_scope` |
 
 审计只作用于 `answered` / `partial`；`needs_clarification` 的答案本身就在列冲突，因此会通过。
 这不是「让模型自我评价」，而是**对模型输出的确定性复核**：`tests/test_audit.py` 用回放决策模拟

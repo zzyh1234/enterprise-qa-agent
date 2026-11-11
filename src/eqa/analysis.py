@@ -69,6 +69,17 @@ class IntentRule:
             return False
         return True
 
+    def has_strong_evidence(self, text: str) -> bool:
+        """更严格版本：所有证据关键词都必须命中（用于潜在冲突检查，减少误报）。"""
+        norm = normalize(text)
+        scrubbed = re.sub(r"《[^》]*》", " ", norm)
+        if self.evidence_keywords:
+            if not all(normalize(key) in scrubbed for key in self.evidence_keywords):
+                return False
+        if self.value_patterns and not self.extract_values(text):
+            return False
+        return True
+
     def extract_values(self, text: str) -> List[Tuple[str, str]]:
         """抽取 (value, 所在原句)。"""
         found: List[Tuple[str, str]] = []

@@ -58,6 +58,18 @@ class AnalysisTests(unittest.TestCase):
         doc, section = self.corpus.find_section("D09", "D09-1.1")
         self.assertTrue(rule.has_evidence(section.text))
 
+    def test_strong_evidence_rejects_generic_keyword_match(self) -> None:
+        rule = self.matcher.get("reimbursement_deadline")
+        doc, section = self.corpus.find_section("D06", "D06-1.3")
+        self.assertFalse(
+            rule.has_strong_evidence(section.text),
+            "D06-1.3 只是「提交工单」，不能算报销时限条款",
+        )
+        doc, section = self.corpus.find_section("D01", "D01-4.2")
+        self.assertTrue(rule.has_strong_evidence(section.text))
+        doc, section = self.corpus.find_section("D02", "D02-3.1")
+        self.assertTrue(rule.has_strong_evidence(section.text))
+
     def test_conflict_between_d01_and_d02(self) -> None:
         rule = self.matcher.get("reimbursement_deadline")
         evidences = []

@@ -150,6 +150,111 @@ class ModelGuardrailTests(unittest.TestCase):
         self.assertEqual(result.status, "audit_failed")
         self.assertIn("没有提供任何逐字引用", result.answer)
 
+    def test_malformed_model_payload_does_not_crash(self) -> None:
+        result = self.run_with_decisions(
+            [
+                {
+                    "action": "finish",
+                    "arguments": {
+                        "status": "answered",
+                        "answer": "报销期限为 15 天。",
+                        "citations": ["D02"],
+                        "conflicts": ["D01 与 D02 不一致"],
+                        "evidence_gaps": "无",
+                    },
+                    "reason": "模型输出结构不规范",
+                }
+            ]
+        )
+        self.assertEqual(result.status, "audit_failed")
+        self.assertTrue(result.evidence_gaps)
+
+    def test_malformed_ask_user_payload_does_not_crash(self) -> None:
+        result = self.run_with_decisions(
+            [
+                {
+                    "action": "ask_user",
+                    "arguments": {
+                        "question": "请确认适用制度",
+                        "options": "D01 或 D02",
+                        "conflicts": ["两份文件不一致"],
+                        "reason": "需要用户确认",
+                    },
+                    "reason": "信息不足，转为追问",
+                }
+            ]
+        )
+        self.assertEqual(result.status, "needs_clarification")
+        self.assertEqual(result.clarification.options, ["D01 或 D02"])
+
+    def test_low_retrieval_confidence_is_rejected(self) -> None:
+        result = self.run_with_decisions(
+            [
+                {
+                    "action": "search_docs",
+                    "arguments": {"query": "公司年会抽奖的奖品是什么？"},
+                    "reason": "先检索",
+                },
+                {
+                    "action": "read_snippet",
+                    "arguments": {"doc_id": "D04", "section_id": "D04-2.3"},
+                    "reason": "随便读一段",
+                },
+                {
+                    "action": "finish",
+                    "arguments": {
+                        "status": "answered",
+                        "answer": "年会奖品是 300% 日工资。",
+                        "citations": [
+                            {
+                                "doc_id": "D04",
+                                "section_id": "D04-2.3",
+                                "quote": "按员工日工资收入的 300% 支付未休年假工资报酬",
+                            }
+                        ],
+                    },
+                    "reason": "硬答",
+                },
+            ]
+        )
+        self.assertEqual(result.status, "audit_failed")
+        self.assertTrue(any("检索置信度不足" in gap for gap in result.evidence_gaps))
+
+    def test_unread_high_score_document_with_different_value_is_rejected(self) -> None:
+        result = self.run_with_decisions(
+            [
+                {
+                    "action": "search_docs",
+                    "arguments": {"query": "报销期限是多久？", "use_expansion": True},
+                    "reason": "先检索",
+                },
+                {
+                    "action": "read_snippet",
+                    "arguments": {"doc_id": "D02", "section_id": "D02-3.1"},
+                    "reason": "只读 D02",
+                },
+                {
+                    "action": "finish",
+                    "arguments": {
+                        "status": "answered",
+                        "answer": "报销期限为 15 天。",
+                        "citations": [
+                            {
+                                "doc_id": "D02",
+                                "section_id": "D02-3.1",
+                                "quote": "员工应在费用发生之日起 15 天内提交报销单据",
+                            }
+                        ],
+                    },
+                    "reason": "只读了一份就作答",
+                },
+            ]
+        )
+        self.assertEqual(result.status, "audit_failed")
+        self.assertTrue(any("潜在冲突" in gap for gap in result.evidence_gaps))
+        self.assertTrue(any("D01" in gap for gap in result.evidence_gaps))
+        self.assertFalse(any("D06" in gap for gap in result.evidence_gaps))
+
     def test_conflict_read_but_only_one_side_cited_is_rejected(self) -> None:
         result = self.run_with_decisions(
             [

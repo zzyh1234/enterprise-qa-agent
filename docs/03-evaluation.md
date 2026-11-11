@@ -6,16 +6,16 @@
 结果文件：`examples/test-results.txt`
 
 ```
-ran=69 failures=0 errors=0 skipped=0 -> OK
+ran=74 failures=0 errors=0 skipped=0 -> OK
 ```
 
 | 测试模块 | 数量 | 覆盖内容 |
 | --- | --- | --- |
 | `tests/test_retrieval.py` | 5 | 切词/归一化、改写提分、越界低分、文档聚合与元数据 |
 | `tests/test_tools.py` | 9 | 检索摘要、改写参数、逐字原文、非法片段/文档、未知工具、故障注入（error/empty）、空查询 |
-| `tests/test_analysis.py` | 9 | 8 类意图识别、越界无意图、VPN 密码 vs 重新认证、引用≠证据、冲突判定、分档不算冲突、memo 优先级、用户显式选择、年假分档 |
+| `tests/test_analysis.py` | 10 | 8 类意图识别、越界无意图、VPN 密码 vs 重新认证、引用≠证据、强证据（排除泛化关键词）、冲突判定、分档不算冲突、memo 优先级、用户显式选择、年假分档 |
 | `tests/test_agent_flows.py` | 15 | 11 个场景的端到端断言 + 预算不越界 + 引用逐字 + 两处「改内容→改答案」 |
-| `tests/test_audit.py` | 9 | 引用逐字/篡改/不存在文档、冲突说明、Mock 与「模型输出」的审计降级、answered 无引用、已读冲突但只引用一方 |
+| `tests/test_audit.py` | 13 | 引用逐字/篡改/不存在文档、冲突说明、answered 无引用、已读冲突只引一方、读了高分文档但漏读另一份、检索置信度不足、模型输出结构非法不崩溃 |
 | `tests/test_planners.py` | 14 | JSON 解析与非法动作、真实模型协议循环（假 transport）、纠正、失败、回放 |
 | `tests/test_cli.py` | 8 | `ask --json`、`--max-tool-calls`、`batch`、`verify`、`--context` 追问、`corpus`、默认 openai 无 key 回退、`--no-fallback` 快速失败、batch 回退标注 |
 
@@ -43,15 +43,35 @@ ran=69 failures=0 errors=0 skipped=0 -> OK
 
 ### 2.1 真实模型补充记录（`examples_openai/`）
 
-- 目录：`examples_openai/01_vpn_normal_real_local/`，模型为本地 Ollama `qwen3-vl:4b`
-  （不用外部 Key），`run.planner=openai`、`planner_fallback=false`。
-- 模型自主决策：`search_docs`（原问题）→ `read_snippet D05-3.1` → `finish(answered)`；
-  答案引用原文逐字，`audit.passed=true`，总耗时约 15s。
-- 边界：只有 1 条路径。批量复跑时该 thinking 模型在长提示下只返回 `reasoning`（`content` 为空），
-  随后 GPU 报 `CUDA error` 并掉卡；代码对此给出明确报错而不是误当答案（见第 4 节）。
-- 因此它只证明「真实模型能驱动同一套循环并产出可核验 Trace」，**不覆盖全部验收点**；
-  11 个验收场景仍由 `examples/` 的 mock 记录覆盖。稳定真实模型（外部 Key 或非 thinking 模型）
-  跑完全量后，才应替换 `examples/` 并更新本节。
+本机无外部 API Key、`api.openai.com` 不可达，改用本地 Ollama 的真实模型（OpenAI 兼容接口）。
+`run.planner=openai`、`planner_fallback=false` 可核对来源。
+
+**可用路径（2 条）**
+
+| 目录 | 模型 | 动作 | 结果 |
+| --- | --- | --- | --- |
+| `01_vpn_normal_real_local/` | qwen3-vl:4b | search → read D05-3.1 → finish | answered，引用逐字，审计通过，约 15s |
+| `05_annual_leave_paraphrase/` | qwen2.5:3b | search（中文改写）→ read D04-2.1 → finish | answered，引用逐字；但未按“6 年”直接给出 5 天，属于部分成功 |
+
+**失败样本（`examples_openai/failures/`，保留以说明真实小模型的失败模式）**
+
+- `02_conflict_asked_user`：只读 D02，发现还有 D01 后让用户比较原文（应自己读 D01）；
+- `04_receipt_lost_paraphrase`：读了一段后反问，未读 D09-1.1；
+- `06_tool_fault_recovered`：多次检索后输出非法 JSON，纠正后又把提示词当答案；
+- `10_out_of_scope`：用最高 10.35 分的文档硬答，被“检索置信度不足”护栏降级为 `audit_failed`。
+
+**边界与已知限制**
+
+- `qwen3-vl:*` / `deepseek-r1:7b` 是 thinking 模型：长提示下 OpenAI 兼容接口只返回 `reasoning`，
+  `content` 为空且 `finish_reason=length`；期间 GPU 还出现 `CUDA error` 掉卡（已恢复）。代码对
+  “只有 reasoning”给出明确报错，不把推理过程当答案。
+- `qwen2.5:3b` 能走完循环，但 3B 的指令遵循不足以稳定处理“读两篇再判冲突”“优先读最高分片段”；
+  `qwen2.5:7b` 在本轮未拉取完成（约 4.7GB，速度 1.5–3.6MB/s）。
+- **因此这 2 条真实路径不覆盖全部验收点**；冲突、追问、工具失败的正确行为仍由 `examples/` 的
+  mock 记录与自动化测试覆盖。要满足“真实模型多路径”的完整要求，需外部 Key 或更强的非 thinking 模型
+  复跑 `python run.py batch --planner openai`，复核后替换 `examples/`。
+- 审计能验证“引用逐字 + 冲突取值是否说明 + 检索置信度”，但**不能判断语义相关性**：
+  真实模型若答非所问但引用逐字，当前仍可能通过。这是本版明确的已知限制（也在第 4 节列出）。
 
 ## 3. 关键用例逐条核对
 
@@ -115,14 +135,16 @@ ran=69 failures=0 errors=0 skipped=0 -> OK
 
 | 项目 | 现状 | 影响 / 后续 |
 | --- | --- | --- |
-| 真实模型效果 | **未调用外部 API**（环境无 Key，api.openai.com 不可达）。只验证了协议循环、JSON 校验、审计兜底 | README/文档均标注；有 Key 时 `python run.py batch --planner openai --out examples_openai` 可直接生成真实 Trace，但效果需另行评测 |
-| 本地真实模型尝试 | 本机 Ollama 有 `qwen3-vl:4b`、`deepseek-r1:7b`，但都是 thinking 模型：OpenAI 兼容接口把内容放在 `reasoning`、`content` 为空且 `finish_reason=length`；随后 GPU 报 `CUDA error` 并掉卡（需重启）。单轮短提示可正常返回 JSON，长提示未产出可用 Trace | 代码已对「只有 reasoning」给出可操作报错；重启后可用非 thinking 模型（如 qwen2.5）或外部 Key 重跑，步骤见 README |
-| examples/ Trace 来源 | 当前 11 个示例由 **mock** 生成（本机无 key），`run.planner=mock`、`planner_fallback=true` | 不能当作真实模型决策证据；配置 key 后重跑、复核审计，再替换 `examples/` 并更新本文档 |
+| 真实模型效果 | 未调用外部 API（无 Key，api.openai.com 不可达）；改用本地 Ollama 跑出 **2 条真实路径**（01、05），另有 4 条失败样本 | 可证明“真实模型能驱动循环并受审计约束”，但不覆盖全部验收点；稳定模型复跑步骤见 README/SUBMISSION |
+| 本地真实模型尝试 | `qwen3-vl:*`/`deepseek-r1:7b` 为 thinking 模型（只返回 `reasoning`、`content` 空），且触发过 GPU `CUDA error` 掉卡；`qwen2.5:3b` 可走完循环但指令遵循弱；`qwen2.5:7b` 未拉取完成 | 代码已对 thinking-only 响应给出可操作报错；失败样本保留在 `examples_openai/failures/`，不伪装成成功 |
+| examples/ Trace 来源 | 11 个示例由 **mock** 生成（本机无外部 Key），`run.planner=mock`；真实模型记录在 `examples_openai/`（2 条可用 + 4 条失败） | 不能用 mock 冒充真实模型；替换前需复核 `run.planner` 与审计 |
 | Mock 决策器 | 规则化，只能证明「流程与护栏」成立，不能证明「模型会这样决策」 | 不作为真实模型能力证据 |
 | 检索阈值 | 15 / 30 / 60 是基于 8 篇文档、11 个问题校准的 | 扩充语料后需用 `scripts/inspect_retrieval.py` 重新校准；生产应改向量 + rerank |
 | 同义词表 | 约 20 条口语映射 | 未覆盖全部口语/方言；改写失败会退回「资料不足」而不是乱答 |
 | 冲突检测 | 仅覆盖「可抽数值/关键词」的属性（天数、金额、GB、位数） | 语义型冲突（例如两种表述互相否定）检测不到，需模型 + 人工规则 |
 | 引用审计 | 要求逐字；模型若改写引用会被判 `audit_failed` | 这是有意的严格策略，换来可机器核验；生产中可在提示词里强调原文复制 |
+| 语义相关性 | 审计能查逐字、冲突取值、检索置信度，但**查不出“引用正确却答非所问”**（真实小模型出现过读错片段仍通过审计） | 需要更强模型/语义判定（LLM judge 或人工抽检）；已在 `docs/03` 2.1 标注 |
+| 未读候选冲突 | 只对“检索高分且能抽出不同取值”的文档做潜在冲突拦截 | 语义型冲突、低分但相关的文档仍可能漏掉 |
 | 追问理解 | 只识别显式选择（文档 ID / 「最新版本」/ 制度类型词） | 更自由的说法会再次追问，不会猜 |
 | 多轮 | 仅支持 1 轮上下文（`--context` 上一轮 output.json），无会话存储 | 需要 Session 时再加 |
 | 工具故障 | 通过 `tool_faults` 注入模拟，不是真实网络故障 | 真实超时/限流需重试策略与熔断 |
@@ -139,7 +161,7 @@ ran=69 failures=0 errors=0 skipped=0 -> OK
 | 替换文档内容后答案/动作是否改变 | 02 vs 09；`test_answer_follows_changed_document_content`；`test_conflict_values_follow_changed_document_content` |
 | 是否有检索改进证据 | 05：改写前后分数 25.45 → 67.17，Trace 记录 `use_expansion` 与新增词；02：7.30 → 59.07 |
 | 是否有执行上限与未完成状态 | 08；`test_budget_limit_returns_explicit_incomplete_status` |
-| 是否有至少两条不同执行路径 | mock：01（直接答）/02（冲突追问）/06（失败重试）/09（查证后答）等 11 条 Trace；真实模型：`examples_openai/` 1 条（search→read→finish）。真实模型的多路径记录仍需稳定模型复跑 |
+| 是否有至少两条不同执行路径 | mock：01（直接答）/02（冲突追问）/06（失败重试）/09（查证后答）等 11 条 Trace；真实模型：`examples_openai/` 2 条可用（01、05）+ 4 条失败样本（`failures/`）。真实模型的冲突/工具失败多路径仍需更强模型复跑 |
 
 ## 6. 复现命令
 

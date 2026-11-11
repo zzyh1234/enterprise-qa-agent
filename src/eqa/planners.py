@@ -44,6 +44,8 @@ from .tools import TOOL_SPECS
 ALLOWED_ACTIONS = {"search_docs", "read_snippet", "ask_user", "finish"}
 MAX_SECTION_READS_PER_DOC = 2
 MAX_CANDIDATE_DOCS = 3
+# 检索命中达到该分数、且本次从未读取的片段，会在提示中列为“未核实的高分文档”
+SEARCH_CANDIDATE_MIN_SCORE = 15.0
 
 
 class PlannerError(Exception):
@@ -850,6 +852,9 @@ SYSTEM_PROMPT = """你是企业知识问答 Agent 的决策器。你只能通过
 
 决策原则：
 - 先检索；命中后必须 read_snippet 取得原文再作答，不得根据检索摘要（preview）作答。
+- 优先读取检索结果中分数最高的片段；若读完发现与问题无关，再读同文档或其他候选的下一个片段。
+- 检索词必须使用中文、沿用用户问题中的制度用语，不要翻译成英文。
+- 若问题给出具体条件（如工作年限、出差城市），答案要直接给出对应取值，并引用包含该取值的原文。
 - 若检索结果中有多篇文档可能规定同一事项（例如都涉及「报销/时限」），至少读取其中 2 篇再判断，
   避免漏掉文档冲突。
 - 若多个文档对同一问题给出不同取值，且没有适用范围/优先级说明：先检索是否存在制度解释
@@ -857,11 +862,17 @@ SYSTEM_PROMPT = """你是企业知识问答 Agent 的决策器。你只能通过
 - 资料不足或问题超出知识库：finish，status=insufficient_evidence，不要编造。
 - 工具报错可重试一次；持续失败：finish，status=blocked。
 - 引用必须逐字来自 read_snippet 的原文，quote 不得改写；answered 至少要有 1 条引用。
-- 每个动作都必须给出 reason：一句话说明「基于上一条工具结果」为什么这样做（不是思考过程）。
+- 只有在「问题缺少必要信息」或「存在无法消解的冲突」时才 ask_user；若已读到的原文足以回答，必须 finish(answered)。
+- finish(answered) 必须带 citations：每个 quote 直接从 read_snippet 返回的 text 复制，不能改写。
+- 若提示里出现「尚未读取的高分文档」，必须先 read_snippet 读取它们，再决定 finish/ask_user；
+  不得让用户替你读文档或比较文档。
+- citations 只能使用 read_snippet 实际返回过的 doc_id 与 section_id；禁止引用没有读过的文档。
 - 工具调用次数有上限，请高效决策。
 
 只输出一个 JSON 对象，格式：
 {"action": "search_docs|read_snippet|ask_user|finish", "arguments": {...}, "reason": "一句话决策依据"}
+示例（仅示意字段，不要照抄内容）：
+{"action":"finish","arguments":{"status":"answered","answer":"……","citations":[{"doc_id":"D05","section_id":"D05-3.1","quote":"……原文……"}],"evidence_gaps":[]},"reason":"已读到原文，可以直接回答"}
 不要输出 Markdown、解释或思考过程。"""
 
 
@@ -934,7 +945,7 @@ class OpenAICompatiblePlanner:
                 result = observation.result
                 state = "ok" if result.ok else f"error: {result.error}"
                 if result.ok:
-                    detail = f"{result.summary} | {_truncate(result.payload, 400)}"
+                    detail = f"{result.summary} | {_truncate(result.payload, 700)}"
                 else:
                     detail = result.summary
                 lines.append(
@@ -943,6 +954,51 @@ class OpenAICompatiblePlanner:
                 )
         else:
             lines.append("尚未执行任何工具，请给出第一步动作。")
+        last = inp.observations[-1] if inp.observations else None
+        if last is not None and last.action == "read_snippet" and last.result.ok:
+            lines.append(
+                "提示：上一步 read_snippet 已返回原文。若原文直接包含问题答案，"
+                "必须立即 finish(answered) 并逐字引用，不要 ask_user。"
+            )
+        read_refs = []
+        for observation in inp.observations:
+            if observation.action != "read_snippet" or not observation.result.ok:
+                continue
+            payload = observation.result.payload or {}
+            doc_id = str(payload.get("doc_id", ""))
+            section_id = str(payload.get("section_id", ""))
+            if doc_id and section_id and f"{doc_id}/{section_id}" not in read_refs:
+                read_refs.append(f"{doc_id}/{section_id}")
+        if read_refs:
+            lines.append(
+                "可引用片段（只能从这里选）："
+                + "、".join(read_refs)
+                + "。quote 必须逐字来自对应 text。"
+            )
+        unread: List[str] = []
+        seen_unread = set()
+        for observation in inp.observations:
+            if observation.action != "search_docs" or not observation.result.ok:
+                continue
+            for hit in (observation.result.payload or {}).get("hits", []) or []:
+                doc_id = str(hit.get("doc_id", ""))
+                section_id = str(hit.get("section_id", ""))
+                score = float(hit.get("score") or 0.0)
+                key = f"{doc_id}/{section_id}"
+                if (
+                    score >= SEARCH_CANDIDATE_MIN_SCORE
+                    and key not in read_refs
+                    and key not in seen_unread
+                ):
+                    seen_unread.add(key)
+                    unread.append(f"{key}（{score:.1f}）")
+        if unread:
+            lines.append(
+                "尚未读取的高分文档："
+                + "、".join(unread[:3])
+                + "。若它们可能规定同一事项，请先 read_snippet 再作答；"
+                "若发现不同取值且无优先级说明，按冲突规则 ask_user。"
+            )
         lines.append(
             f"剩余预算：步数 {inp.remaining_steps}，工具调用 {inp.remaining_tool_calls}。"
         )

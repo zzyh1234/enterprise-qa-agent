@@ -8,7 +8,7 @@
 | `output.json` | 完整结果：status / answer / citations / gaps / conflicts / clarification / audit / run / trace |
 | `trace.json` | 仅执行步骤（决策依据、动作、参数、观察、后续动作） |
 | `trace.md` | 人类可读的 Trace 表格 + 答案 + 引用 + 缺口 + 决策器来源 |
-| `test-results.txt`（根目录） | 69 个 unittest 的实际输出：`ran=69 failures=0 errors=0` |
+| `test-results.txt`（根目录） | 74 个 unittest 的实际输出：`ran=74 failures=0 errors=0` |
 | `verify-results.txt`（根目录） | 对全部 `output.json` 的逐字引用/冲突审计：11 个 `[PASS]` |
 
 > **当前 Trace 来源**：本机没有 API Key，11 个示例均由 `--planner mock` 生成，

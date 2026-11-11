@@ -40,7 +40,7 @@ python run.py ask "报销期限是多久？" --planner mock             # 冲突
 python run.py ask "那按最新发布的版本执行呢？" --context examples/02_reimbursement_conflict/output.json --planner mock
 python run.py batch --planner mock       # 离线重跑全部 11 个场景，写入 examples/<id>/
 python run.py verify "examples/*/output.json"   # 逐字引用 + 冲突说明审计
-python scripts/run_tests.py              # 69 个测试，结果写入 examples/test-results.txt
+python scripts/run_tests.py              # 74 个测试，结果写入 examples/test-results.txt
 ```
 
 可选（生成 `eqa` 命令）：`pip install -e .`
@@ -79,8 +79,8 @@ python run.py verify "examples_openai/*/output.json"
 | 执行上限 | `examples/08_budget_exceeded/` |
 | 资料外问题 | `examples/10_out_of_scope/` |
 | 引用是否真实 | `examples/verify-results.txt`（11 个输出全部 PASS） |
-| 测试是否真跑过 | `examples/test-results.txt`（`ran=69 failures=0 errors=0`） |
-| 真实模型决策记录（1 条路径） | `examples_openai/01_vpn_normal_real_local/`：本地 Ollama `qwen3-vl:4b`，`run.planner=openai`、引用逐字、审计通过；仅 1 条路径，不覆盖全部验收点 |
+| 测试是否真跑过 | `examples/test-results.txt`（`ran=74 failures=0 errors=0`） |
+| 真实模型决策记录 | `examples_openai/`：2 条可用路径（`01_vpn_normal_real_local`：qwen3-vl:4b；`05_annual_leave_paraphrase`：qwen2.5:3b）+ 4 条失败样本（`failures/`，含被“检索置信度不足”护栏拦下的越界硬答）；不覆盖全部验收点 |
 | Trace 是真实模型还是规则 | 看 `output.json` 的 `run.planner`、`run.planner_requested`、`run.planner_fallback`；`examples/` 为 mock（本机无外部 Key），`examples_openai/` 为真实本地模型 |
 
 ---
@@ -176,7 +176,7 @@ enterprise-qa-agent/
 │  ├─ query_expansions.json   # 同义词/口语改写词典
 │  ├─ scenarios.json          # 11 个评测场景
 │  └─ replay/vpn_replay.json  # 离线回放决策（Mock 决策，非真实模型输出）
-├─ tests/                     # 69 个 unittest（无第三方依赖）
+├─ tests/                     # 74 个 unittest（无第三方依赖）
 ├─ scripts/                   # 生成 v2 语料 / 检索分数 / 跑测试 / 审计示例
 ├─ examples/                  # 11 组 mock 场景 input / output / trace + 测试与审计结果
 ├─ examples_openai/           # 真实模型（本地 Ollama）单路径记录 + 复现说明
@@ -191,8 +191,8 @@ enterprise-qa-agent/
 | --- | --- |
 | AI 辅助实现 + 自测（本次会话） | 约 3 小时（代码、语料、测试、示例、文档） |
 | 提交人实际用时 | 待提交人核对后填写（未记录则不填，勿虚报） |
-| examples/ Trace 来源 | `examples/` 为 **mock**（本机无外部 Key；`run.planner=mock`、`planner_fallback=true`）；**真实本地模型**单路径记录在 `examples_openai/`（Ollama `qwen3-vl:4b`，`run.planner=openai`，仅 1 条路径） |
-| 未完成 | 外部真实模型 API 未调用（无 Key，api.openai.com 不可达）；本地 thinking 模型在长提示下只返回 reasoning 且 GPU 掉卡，未能批量跑完 11 个真实场景；审批流/权限/多租户/线上部署未做；评测集规模小（11 场景 / 8 篇文档，v2 为 9 篇） |
+| examples/ Trace 来源 | `examples/` 为 **mock**（本机无外部 Key；`run.planner=mock`）；**真实本地模型**记录在 `examples_openai/`（2 条可用路径 + 4 条失败样本） |
+| 未完成 | 外部真实模型 API 未调用（无 Key，api.openai.com 不可达）；本地 thinking 模型只返回 reasoning 且曾掉卡，3B 模型指令遵循不足，7B 未拉完；因此真实模型未覆盖全部 11 个场景；审批流/权限/多租户/线上部署未做；评测集规模小（11 场景 / 8 篇文档，v2 为 9 篇） |
 | 刻意不做 | Web UI、多 Agent、向量数据库、生产级 Runtime（题目明确非必需） |
 
 已知限制详见 `docs/03-evaluation.md` 第 4 节；设计取舍见 `docs/02-solution.md`。

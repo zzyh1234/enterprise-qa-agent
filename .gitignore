@@ -13,3 +13,4 @@ check.txt
 tmp_*.txt
 _tmp_*.py
 ollama_serve.*.log
+qwen25_7b_pull.*.log

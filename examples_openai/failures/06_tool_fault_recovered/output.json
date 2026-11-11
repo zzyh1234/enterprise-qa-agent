@@ -1,0 +1,162 @@
+{
+  "task_id": "06_tool_fault_recovered",
+  "question": "VPN 密码有什么要求？",
+  "history": [],
+  "status": "needs_clarification",
+  "status_label": "需要澄清（存在未解决冲突或缺少上下文）",
+  "answer": "用户问题：VPN 密码有什么要求？已执行步骤（观察 → 结果）：- step 1: search_docs {",
+  "citations": [],
+  "evidence_gaps": [],
+  "conflicts": [],
+  "clarification": {
+    "question": "用户问题：VPN 密码有什么要求？已执行步骤（观察 → 结果）：- step 1: search_docs {",
+    "options": [],
+    "reason": ""
+  },
+  "audit": {
+    "passed": true,
+    "citations": [],
+    "citations_supported": true,
+    "conflict": {
+      "detected": false,
+      "acknowledged": true,
+      "values": [],
+      "topic": ""
+    },
+    "notes": []
+  },
+  "run": {
+    "planner": "openai",
+    "model": "qwen2.5:3b",
+    "corpus": "data/documents.json",
+    "budget": {
+      "max_steps": 10,
+      "max_tool_calls": 8,
+      "used_steps": 6,
+      "used_tool_calls": 4,
+      "exceeded": false,
+      "exceeded_reason": ""
+    },
+    "tool_calls": 4,
+    "elapsed_ms": 19351,
+    "failures": [],
+    "notes": [],
+    "planner_requested": "openai",
+    "planner_fallback": false
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 密码 要求",
+          "top_k": 5,
+          "use_expansion": false
+        },
+        "reason": "先检索关于 VPN 密码要求的相关文档"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "search_docs 调用失败：检索服务超时（模拟故障）",
+        "error": "检索服务超时（模拟故障）"
+      },
+      "follow_up": "search_docs：需要查找关于 VPN 密码要求的相关文档",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 密码 要求",
+          "top_k": 5,
+          "use_expansion": false
+        },
+        "reason": "需要查找关于 VPN 密码要求的相关文档"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 2 篇文档，最高分 13.47：D05(13.47)、D01(6.65)"
+      },
+      "follow_up": "search_docs：需要获取更多文档以确定 VPN 密码的要求",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 密码 要求",
+          "top_k": 5,
+          "use_expansion": false
+        },
+        "reason": "需要获取更多文档以确定 VPN 密码的要求"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 2 篇文档，最高分 13.47：D05(13.47)、D01(6.65)"
+      },
+      "follow_up": "read_snippet：优先读取最高分文档的指定片段",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 4,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D05",
+          "section_id": "D05-3.2"
+        },
+        "reason": "优先读取最高分文档的指定片段"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D05/D05-3.2《密码与多因素认证》共 63 字"
+      },
+      "follow_up": "planner_error：决策输出不可解析，记录错误并准备纠正",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 5,
+      "decision": {
+        "action": "planner_error",
+        "arguments": {},
+        "reason": "决策输出不可解析，记录错误并准备纠正"
+      },
+      "observation": {
+        "ok": false,
+        "summary": "模型输出 JSON 无法解析：Expecting ',' delimiter: line 1 column 496 (char 495)",
+        "error": "模型输出 JSON 无法解析：Expecting ',' delimiter: line 1 column 496 (char 495)"
+      },
+      "follow_up": "ask_user：需要进一步确认文档内容以回答用户问题",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 6,
+      "decision": {
+        "action": "ask_user",
+        "arguments": {
+          "question": "用户问题：VPN 密码有什么要求？已执行步骤（观察 → 结果）：- step 1: search_docs {",
+          "options": []
+        },
+        "reason": "需要进一步确认文档内容以回答用户问题"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "暂停并向用户提问：用户问题：VPN 密码有什么要求？已执行步骤（观察 → 结果）：- step 1: search_docs {"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ],
+  "scenario": {
+    "id": "06_tool_fault_recovered",
+    "title": "工具失败后重试恢复：检索超时一次",
+    "coverage": [
+      "工具失败",
+      "明确答案"
+    ],
+    "baseline": null
+  }
+}

@@ -20,6 +20,7 @@ test_intents_are_detected_for_acceptance_questions (tests.test_analysis.Analysis
 test_memo_precedence_resolves_conflict (tests.test_analysis.AnalysisTests.test_memo_precedence_resolves_conflict) ... ok
 test_out_of_scope_question_has_no_intent (tests.test_analysis.AnalysisTests.test_out_of_scope_question_has_no_intent) ... ok
 test_single_document_tiers_are_not_a_conflict (tests.test_analysis.AnalysisTests.test_single_document_tiers_are_not_a_conflict) ... ok
+test_strong_evidence_rejects_generic_keyword_match (tests.test_analysis.AnalysisTests.test_strong_evidence_rejects_generic_keyword_match) ... ok
 test_user_choice_only_accepts_explicit_selection (tests.test_analysis.AnalysisTests.test_user_choice_only_accepts_explicit_selection) ... ok
 test_vpn_password_and_reauth_are_distinguished (tests.test_analysis.AnalysisTests.test_vpn_password_and_reauth_are_distinguished) ... ok
 test_audit_result_combines_checks (tests.test_audit.AuditTests.test_audit_result_combines_checks) ... ok
@@ -30,7 +31,11 @@ test_verbatim_citation_passes (tests.test_audit.AuditTests.test_verbatim_citatio
 test_answer_without_any_citation_is_rejected (tests.test_audit.ModelGuardrailTests.test_answer_without_any_citation_is_rejected) ... ok
 test_conflict_read_but_only_one_side_cited_is_rejected (tests.test_audit.ModelGuardrailTests.test_conflict_read_but_only_one_side_cited_is_rejected) ... ok
 test_fabricated_citation_downgrades_status (tests.test_audit.ModelGuardrailTests.test_fabricated_citation_downgrades_status) ... ok
+test_low_retrieval_confidence_is_rejected (tests.test_audit.ModelGuardrailTests.test_low_retrieval_confidence_is_rejected) ... ok
+test_malformed_ask_user_payload_does_not_crash (tests.test_audit.ModelGuardrailTests.test_malformed_ask_user_payload_does_not_crash) ... ok
+test_malformed_model_payload_does_not_crash (tests.test_audit.ModelGuardrailTests.test_malformed_model_payload_does_not_crash) ... ok
 test_unacknowledged_conflict_downgrades_status (tests.test_audit.ModelGuardrailTests.test_unacknowledged_conflict_downgrades_status) ... ok
+test_unread_high_score_document_with_different_value_is_rejected (tests.test_audit.ModelGuardrailTests.test_unread_high_score_document_with_different_value_is_rejected) ... ok
 test_ask_budget_flag (tests.test_cli.CliTests.test_ask_budget_flag) ... ok
 test_ask_json (tests.test_cli.CliTests.test_ask_json) ... ok
 test_batch_and_verify (tests.test_cli.CliTests.test_batch_and_verify) ... ok
@@ -69,6 +74,6 @@ test_search_with_expansion_reports_added_terms (tests.test_tools.ToolTests.test_
 test_unknown_tool_is_rejected (tests.test_tools.ToolTests.test_unknown_tool_is_rejected) ... ok
 
 ----------------------------------------------------------------------
-Ran 69 tests in <elapsed>s
+Ran 74 tests in <elapsed>s
 
 OK
