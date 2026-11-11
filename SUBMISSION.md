@@ -3,8 +3,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 题号 | 企业知识问答 Agent（企业制度/产品问答，要求引用、冲突处理、动态决策） |
-| 仓库 URL | `<https://github.com/zzyh1234/enterprise-qa-agent>` |
-| 最终 commit SHA | `<push 后填写；本地 commit 见 git log -1>` |
+| 仓库 URL | https://github.com/zzyh1234/enterprise-qa-agent |
+| 最终 commit SHA | push 后填写；本地 commit 见 git log -1 |
 | 运行入口 | `python run.py ask "报销期限是多久？"`（无需安装依赖；默认请求真实模型，无 key 自动回退 mock 并标注） |
 | 评审入口 | `README.md` 第 3 节；`examples/README.md`；`docs/03-evaluation.md` |
 | 离线可用 | 是：`--planner mock` 无 key 跑通全部场景与测试。CLI 默认 `--planner openai`；未配置 `EQA_API_KEY` 时**自动回退 mock**，并在 `run.planner_requested=openai`、`run.planner_fallback=true`、stderr 警告与 `run.notes` 中如实标注 |
