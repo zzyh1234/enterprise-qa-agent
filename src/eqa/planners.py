@@ -849,12 +849,15 @@ SYSTEM_PROMPT = """你是企业知识问答 Agent 的决策器。你只能通过
      incomplete_budget_exceeded / failed。
 
 决策原则：
-- 先检索；命中后必须 read_snippet 取得原文再作答。
+- 先检索；命中后必须 read_snippet 取得原文再作答，不得根据检索摘要（preview）作答。
+- 若检索结果中有多篇文档可能规定同一事项（例如都涉及「报销/时限」），至少读取其中 2 篇再判断，
+  避免漏掉文档冲突。
 - 若多个文档对同一问题给出不同取值，且没有适用范围/优先级说明：先检索是否存在制度解释
   （如「以……为准」）；仍无法消解则 ask_user，列出冲突取值与引用，绝不擅自选一个。
 - 资料不足或问题超出知识库：finish，status=insufficient_evidence，不要编造。
 - 工具报错可重试一次；持续失败：finish，status=blocked。
-- 引用必须逐字来自 read_snippet 的原文，quote 不得改写。
+- 引用必须逐字来自 read_snippet 的原文，quote 不得改写；answered 至少要有 1 条引用。
+- 每个动作都必须给出 reason：一句话说明「基于上一条工具结果」为什么这样做（不是思考过程）。
 - 工具调用次数有上限，请高效决策。
 
 只输出一个 JSON 对象，格式：
@@ -878,15 +881,17 @@ class OpenAICompatiblePlanner:
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
         transport: Optional[Callable[[Dict[str, Any]], Dict[str, Any]]] = None,
-        timeout: int = 30,
+        timeout: Optional[int] = None,
         temperature: float = 0.0,
+        max_tokens: Optional[int] = None,
     ):
         self.model = model or os.environ.get("EQA_MODEL", "gpt-4o-mini")
         self.base_url = (base_url or os.environ.get("EQA_BASE_URL", "https://api.openai.com/v1")).rstrip("/")
         self.api_key = api_key or os.environ.get("EQA_API_KEY", "")
         self.transport = transport or _http_transport
-        self.timeout = timeout
+        self.timeout = int(timeout or os.environ.get("EQA_TIMEOUT", "30"))
         self.temperature = temperature
+        self.max_tokens = int(max_tokens or os.environ.get("EQA_MAX_TOKENS", "1200"))
 
     def decide(self, inp: PlannerInput) -> Decision:
         payload = {
@@ -895,6 +900,8 @@ class OpenAICompatiblePlanner:
             "temperature": self.temperature,
             "response_format": {"type": "json_object"},
         }
+        if self.max_tokens > 0:
+            payload["max_tokens"] = self.max_tokens
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
@@ -967,9 +974,26 @@ def _http_transport(request: Dict[str, Any]) -> Dict[str, Any]:
 
 def _extract_content(response: Dict[str, Any]) -> str:
     try:
-        return response["choices"][0]["message"]["content"]
+        message = response["choices"][0]["message"]
     except (KeyError, IndexError, TypeError) as exc:
-        raise PlannerError(f"模型响应格式不符合 OpenAI 兼容协议：{_truncate(response, 300)}") from exc
+        raise PlannerError(
+            f"模型响应格式不符合 OpenAI 兼容协议：{_truncate(response, 300)}"
+        ) from exc
+
+    content = message.get("content")
+    if content:
+        return content
+
+    # 某些 thinking 模型（如 Ollama 上的 qwen3/deepseek-r1）只返回 reasoning，content 为空。
+    # 不把推理过程当答案解析，直接给出可操作的错误。
+    reasoning = message.get("reasoning") or message.get("thinking") or message.get("reasoning_content")
+    if reasoning:
+        raise PlannerError(
+            "模型只返回了 reasoning/thinking，content 为空（finish_reason 可能为 length）。"
+            "请关闭 thinking（Ollama 原生 /api/chat 传 think=false）或改用非 thinking 模型；"
+            f"reasoning 片段：{_truncate(str(reasoning), 160)}"
+        )
+    raise PlannerError("模型返回了空内容（content 为空），请检查模型是否支持 JSON 输出。")
 
 
 def parse_decision(content: str) -> Decision:

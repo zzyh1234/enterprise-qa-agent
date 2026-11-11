@@ -6,7 +6,7 @@
 结果文件：`examples/test-results.txt`
 
 ```
-ran=67 failures=0 errors=0 skipped=0 -> OK
+ran=69 failures=0 errors=0 skipped=0 -> OK
 ```
 
 | 测试模块 | 数量 | 覆盖内容 |
@@ -15,7 +15,7 @@ ran=67 failures=0 errors=0 skipped=0 -> OK
 | `tests/test_tools.py` | 9 | 检索摘要、改写参数、逐字原文、非法片段/文档、未知工具、故障注入（error/empty）、空查询 |
 | `tests/test_analysis.py` | 9 | 8 类意图识别、越界无意图、VPN 密码 vs 重新认证、引用≠证据、冲突判定、分档不算冲突、memo 优先级、用户显式选择、年假分档 |
 | `tests/test_agent_flows.py` | 15 | 11 个场景的端到端断言 + 预算不越界 + 引用逐字 + 两处「改内容→改答案」 |
-| `tests/test_audit.py` | 7 | 引用逐字/篡改/不存在文档、冲突说明、Mock 与「模型输出」的审计降级 |
+| `tests/test_audit.py` | 9 | 引用逐字/篡改/不存在文档、冲突说明、Mock 与「模型输出」的审计降级、answered 无引用、已读冲突但只引用一方 |
 | `tests/test_planners.py` | 14 | JSON 解析与非法动作、真实模型协议循环（假 transport）、纠正、失败、回放 |
 | `tests/test_cli.py` | 8 | `ask --json`、`--max-tool-calls`、`batch`、`verify`、`--context` 追问、`corpus`、默认 openai 无 key 回退、`--no-fallback` 快速失败、batch 回退标注 |
 
@@ -40,6 +40,18 @@ ran=67 failures=0 errors=0 skipped=0 -> OK
 
 每个目录含：`input.json`（问题、历史、语料、预算、故障注入）、`output.json`（完整结果）、
 `trace.json`（仅步骤）、`trace.md`（人类可读表格）。
+
+### 2.1 真实模型补充记录（`examples_openai/`）
+
+- 目录：`examples_openai/01_vpn_normal_real_local/`，模型为本地 Ollama `qwen3-vl:4b`
+  （不用外部 Key），`run.planner=openai`、`planner_fallback=false`。
+- 模型自主决策：`search_docs`（原问题）→ `read_snippet D05-3.1` → `finish(answered)`；
+  答案引用原文逐字，`audit.passed=true`，总耗时约 15s。
+- 边界：只有 1 条路径。批量复跑时该 thinking 模型在长提示下只返回 `reasoning`（`content` 为空），
+  随后 GPU 报 `CUDA error` 并掉卡；代码对此给出明确报错而不是误当答案（见第 4 节）。
+- 因此它只证明「真实模型能驱动同一套循环并产出可核验 Trace」，**不覆盖全部验收点**；
+  11 个验收场景仍由 `examples/` 的 mock 记录覆盖。稳定真实模型（外部 Key 或非 thinking 模型）
+  跑完全量后，才应替换 `examples/` 并更新本节。
 
 ## 3. 关键用例逐条核对
 
@@ -103,7 +115,8 @@ ran=67 failures=0 errors=0 skipped=0 -> OK
 
 | 项目 | 现状 | 影响 / 后续 |
 | --- | --- | --- |
-| 真实模型效果 | **未调用真实 API**（环境无 Key）。只验证了协议循环、JSON 校验、审计兜底 | README/文档均标注；有 Key 时 `python run.py batch --planner openai --out examples_openai` 可直接生成真实 Trace，但效果需另行评测 |
+| 真实模型效果 | **未调用外部 API**（环境无 Key，api.openai.com 不可达）。只验证了协议循环、JSON 校验、审计兜底 | README/文档均标注；有 Key 时 `python run.py batch --planner openai --out examples_openai` 可直接生成真实 Trace，但效果需另行评测 |
+| 本地真实模型尝试 | 本机 Ollama 有 `qwen3-vl:4b`、`deepseek-r1:7b`，但都是 thinking 模型：OpenAI 兼容接口把内容放在 `reasoning`、`content` 为空且 `finish_reason=length`；随后 GPU 报 `CUDA error` 并掉卡（需重启）。单轮短提示可正常返回 JSON，长提示未产出可用 Trace | 代码已对「只有 reasoning」给出可操作报错；重启后可用非 thinking 模型（如 qwen2.5）或外部 Key 重跑，步骤见 README |
 | examples/ Trace 来源 | 当前 11 个示例由 **mock** 生成（本机无 key），`run.planner=mock`、`planner_fallback=true` | 不能当作真实模型决策证据；配置 key 后重跑、复核审计，再替换 `examples/` 并更新本文档 |
 | Mock 决策器 | 规则化，只能证明「流程与护栏」成立，不能证明「模型会这样决策」 | 不作为真实模型能力证据 |
 | 检索阈值 | 15 / 30 / 60 是基于 8 篇文档、11 个问题校准的 | 扩充语料后需用 `scripts/inspect_retrieval.py` 重新校准；生产应改向量 + rerank |
@@ -126,7 +139,7 @@ ran=67 failures=0 errors=0 skipped=0 -> OK
 | 替换文档内容后答案/动作是否改变 | 02 vs 09；`test_answer_follows_changed_document_content`；`test_conflict_values_follow_changed_document_content` |
 | 是否有检索改进证据 | 05：改写前后分数 25.45 → 67.17，Trace 记录 `use_expansion` 与新增词；02：7.30 → 59.07 |
 | 是否有执行上限与未完成状态 | 08；`test_budget_limit_returns_explicit_incomplete_status` |
-| 是否有至少两条不同执行路径 | 01（直接答）、02（冲突追问）、06（失败重试）、09（查证后答）等 11 条 Trace |
+| 是否有至少两条不同执行路径 | mock：01（直接答）/02（冲突追问）/06（失败重试）/09（查证后答）等 11 条 Trace；真实模型：`examples_openai/` 1 条（search→read→finish）。真实模型的多路径记录仍需稳定模型复跑 |
 
 ## 6. 复现命令
 

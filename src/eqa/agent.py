@@ -74,6 +74,7 @@ class KnowledgeQAAgent:
         tools = KnowledgeTools(self.corpus, self.index, faults=self.faults)
         steps: List[TraceStep] = []
         observations: List[Observation] = []
+        self._read_sections: List[tuple] = []
         started = time.perf_counter()
         planner_errors = 0
         task_id = task_id or f"task-{uuid.uuid4().hex[:10]}"
@@ -183,6 +184,12 @@ class KnowledgeQAAgent:
                     result=tool_result,
                 )
             )
+            if decision.action == "read_snippet" and tool_result.ok:
+                payload = tool_result.payload or {}
+                doc_id = str(payload.get("doc_id", ""))
+                section_id = str(payload.get("section_id", ""))
+                if doc_id and section_id:
+                    self._read_sections.append((doc_id, section_id))
 
     # ------------------------------------------------------------ 结束处理
     def _finish_from_payload(
@@ -467,14 +474,27 @@ class KnowledgeQAAgent:
         previous = [item.get("content", "") for item in result.history if item.get("role") == "user"]
         contextual = " ".join(previous + [result.question]).strip()
         audit = audit_result(
-            contextual, result.answer, result.citations, self.matcher, self.corpus
+            contextual,
+            result.answer,
+            result.citations,
+            self.matcher,
+            self.corpus,
+            extra_sections=getattr(self, "_read_sections", ()),
         )
         result.audit = audit
-        if result.status in AUDITED_STATUSES and not audit["passed"]:
+        if result.status not in AUDITED_STATUSES:
+            return result
+
+        problems = list(audit["notes"])
+        if not result.citations:
+            problems.append("状态为 answered/partial 但没有提供任何逐字引用")
+        if problems:
             result.status = STATUS_AUDIT_FAILED
-            note = "；".join(audit["notes"])
+            result.audit["passed"] = False
+            result.audit.setdefault("notes", []).extend(problems)
+            note = "；".join(dict.fromkeys(problems))
             result.answer += f"\n\n【审计未通过】{note}。该答案不可采信，需人工复核。"
-            result.evidence_gaps.extend(audit["notes"])
+            result.evidence_gaps.extend(dict.fromkeys(problems))
         return result
 
     @staticmethod

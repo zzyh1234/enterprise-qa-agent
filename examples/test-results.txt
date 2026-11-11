@@ -27,6 +27,8 @@ test_conflict_acknowledgement (tests.test_audit.AuditTests.test_conflict_acknowl
 test_tampered_quote_is_rejected (tests.test_audit.AuditTests.test_tampered_quote_is_rejected) ... ok
 test_unknown_document_is_rejected (tests.test_audit.AuditTests.test_unknown_document_is_rejected) ... ok
 test_verbatim_citation_passes (tests.test_audit.AuditTests.test_verbatim_citation_passes) ... ok
+test_answer_without_any_citation_is_rejected (tests.test_audit.ModelGuardrailTests.test_answer_without_any_citation_is_rejected) ... ok
+test_conflict_read_but_only_one_side_cited_is_rejected (tests.test_audit.ModelGuardrailTests.test_conflict_read_but_only_one_side_cited_is_rejected) ... ok
 test_fabricated_citation_downgrades_status (tests.test_audit.ModelGuardrailTests.test_fabricated_citation_downgrades_status) ... ok
 test_unacknowledged_conflict_downgrades_status (tests.test_audit.ModelGuardrailTests.test_unacknowledged_conflict_downgrades_status) ... ok
 test_ask_budget_flag (tests.test_cli.CliTests.test_ask_budget_flag) ... ok
@@ -67,6 +69,6 @@ test_search_with_expansion_reports_added_terms (tests.test_tools.ToolTests.test_
 test_unknown_tool_is_rejected (tests.test_tools.ToolTests.test_unknown_tool_is_rejected) ... ok
 
 ----------------------------------------------------------------------
-Ran 67 tests in <elapsed>s
+Ran 69 tests in <elapsed>s
 
 OK

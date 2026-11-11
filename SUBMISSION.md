@@ -8,7 +8,8 @@
 | 运行入口 | `python run.py ask "报销期限是多久？"`（无需安装依赖；默认请求真实模型，无 key 自动回退 mock 并标注） |
 | 评审入口 | `README.md` 第 3 节；`examples/README.md`；`docs/03-evaluation.md` |
 | 离线可用 | 是：`--planner mock` 无 key 跑通全部场景与测试。CLI 默认 `--planner openai`；未配置 `EQA_API_KEY` 时**自动回退 mock**，并在 `run.planner_requested=openai`、`run.planner_fallback=true`、stderr 警告与 `run.notes` 中如实标注 |
-| examples/ 当前来源 | **mock 决策器**（本机无 API Key；`run.planner=mock`、`planner_fallback=true`）。真实模型 Trace 需自备 key，按下方命令生成并复核后再替换 |
+| examples/ 当前来源 | `examples/` 为 **mock** 决策器（本机无外部 Key；`run.planner=mock`、`planner_fallback=true`），11 个场景全量可复现 |
+| 真实模型记录 | `examples_openai/01_vpn_normal_real_local/`：本地 Ollama `qwen3-vl:4b`，`run.planner=openai`、`planner_fallback=false`，模型自主 `search → read → finish`，引用逐字、审计通过（仅 1 条路径） |
 | 私有仓库 | 若为私有仓库，请给评审账号授予 Read 权限 |
 
 ## 生成真实模型 Trace（替换当前 mock 示例）
@@ -34,7 +35,7 @@ python run.py verify "examples_openai/*/output.json"
 ## 提交前自检
 
 ```powershell
-python scripts/run_tests.py        # 期望 ran=67 failures=0 errors=0
+python scripts/run_tests.py        # 期望 ran=69 failures=0 errors=0
 python run.py batch                # 期望 11 个场景，状态与 examples/README.md 一致
 python scripts/verify_examples.py  # 期望 11 个 [PASS]
 ```

@@ -1,0 +1,126 @@
+{
+  "task_id": "task-17f5e7c255",
+  "question": "VPN 账号多久需要重新认证？",
+  "history": [],
+  "status": "answered",
+  "status_label": "已回答",
+  "answer": "VPN 账号每 180 天需要进行一次重新认证，认证通过后有效期顺延 180 天；逾期未认证的账号将被停用。",
+  "citations": [
+    {
+      "doc_id": "D05",
+      "title": "IT 服务与 VPN 使用规范",
+      "section_id": "D05-3.1",
+      "heading": "账号有效期与重新认证",
+      "version_date": "2024-05-20",
+      "quote": "VPN 账号每 180 天需要进行一次重新认证，认证通过后有效期顺延 180 天；逾期未认证的账号将被停用。",
+      "supports": "直接引用原文"
+    }
+  ],
+  "evidence_gaps": [],
+  "conflicts": [],
+  "clarification": null,
+  "audit": {
+    "passed": true,
+    "citations": [
+      {
+        "doc_id": "D05",
+        "section_id": "D05-3.1",
+        "supported": true,
+        "reason": "原文逐字包含引用"
+      }
+    ],
+    "citations_supported": true,
+    "conflict": {
+      "detected": false,
+      "acknowledged": true,
+      "values": [],
+      "topic": ""
+    },
+    "notes": []
+  },
+  "run": {
+    "planner": "openai",
+    "model": "qwen3-vl:4b",
+    "corpus": "data/documents.json",
+    "budget": {
+      "max_steps": 6,
+      "max_tool_calls": 4,
+      "used_steps": 3,
+      "used_tool_calls": 2,
+      "exceeded": false,
+      "exceeded_reason": ""
+    },
+    "tool_calls": 2,
+    "elapsed_ms": 15390,
+    "failures": [],
+    "notes": [],
+    "planner_requested": "openai",
+    "planner_fallback": false
+  },
+  "trace": [
+    {
+      "step": 1,
+      "decision": {
+        "action": "search_docs",
+        "arguments": {
+          "query": "VPN 账号多久需要重新认证？",
+          "top_k": 5,
+          "use_expansion": false
+        },
+        "reason": "检索相关制度文档以确定VPN账号重新认证周期"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "命中 5 篇文档，最高分 44.31：D05(44.31)、D01(4.58)、D09(3.62)、D04(3.15)、D02(2.48)"
+      },
+      "follow_up": "read_snippet：需读取最高分文档D05-3.1的原文以确认VPN账号重新认证的具体周期",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 2,
+      "decision": {
+        "action": "read_snippet",
+        "arguments": {
+          "doc_id": "D05",
+          "section_id": "D05-3.1"
+        },
+        "reason": "需读取最高分文档D05-3.1的原文以确认VPN账号重新认证的具体周期"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "读取 D05/D05-3.1《账号有效期与重新认证》共 54 字"
+      },
+      "follow_up": "结束（answered）：模型未提供决策依据",
+      "elapsed_ms": 0
+    },
+    {
+      "step": 3,
+      "decision": {
+        "action": "finish",
+        "arguments": {
+          "status": "answered",
+          "cited_docs": [
+            "D05"
+          ]
+        },
+        "reason": "模型未提供决策依据"
+      },
+      "observation": {
+        "ok": true,
+        "summary": "结束：status=answered，引用 1 条"
+      },
+      "follow_up": "任务结束",
+      "elapsed_ms": 0
+    }
+  ],
+  "scenario": {
+    "id": "01_vpn_normal_real_local",
+    "title": "真实本地模型（Ollama qwen3-vl:4b）：正常路径 search → read → finish",
+    "coverage": [
+      "真实模型决策",
+      "明确答案",
+      "引用原文"
+    ],
+    "baseline": null
+  }
+}

@@ -15,7 +15,7 @@ from .analysis import IntentMatcher
 from .audit import audit_result
 from .corpus import Corpus
 from .models import Citation
-from .planners import ReplayPlanner
+from .planners import OpenAICompatiblePlanner, ReplayPlanner
 from .runner import load_scenarios, render_result_text, run_all_scenarios
 
 CITATION_FIELDS = ("doc_id", "title", "section_id", "heading", "version_date", "quote", "supports")
@@ -101,6 +101,14 @@ def cmd_ask(args: argparse.Namespace) -> int:
             print("--planner replay 需要同时提供 --replay <decisions.json>", file=sys.stderr)
             return 2
         planner = ReplayPlanner.load(args.replay)
+    elif effective == "openai":
+        planner = OpenAICompatiblePlanner(
+            model=args.model,
+            base_url=args.base_url,
+            api_key=args.api_key,
+            timeout=args.timeout,
+            max_tokens=args.max_tokens,
+        )
 
     agent = KnowledgeQAAgent(
         corpus_path=args.corpus,
@@ -110,16 +118,6 @@ def cmd_ask(args: argparse.Namespace) -> int:
         max_steps=args.max_steps,
         max_tool_calls=args.max_tool_calls,
     )
-    if effective == "openai":
-        if args.api_key:
-            os.environ["EQA_API_KEY"] = args.api_key
-            agent.planner.api_key = args.api_key
-        if args.base_url:
-            os.environ["EQA_BASE_URL"] = args.base_url
-            agent.planner.base_url = args.base_url.rstrip("/")
-        if args.model:
-            os.environ["EQA_MODEL"] = args.model
-            agent.planner.model = args.model
 
     result = agent.answer(args.question, history=history, prior_result=prior)
     payload = result.to_dict()
@@ -184,6 +182,8 @@ def cmd_batch(args: argparse.Namespace) -> int:
         os.environ["EQA_BASE_URL"] = args.base_url
     if args.model:
         os.environ["EQA_MODEL"] = args.model
+    os.environ["EQA_TIMEOUT"] = str(args.timeout)
+    os.environ["EQA_MAX_TOKENS"] = str(args.max_tokens)
 
     out_root = pathlib.Path(args.out)
     results = run_all_scenarios(prepared, out_root=out_root)
@@ -295,8 +295,10 @@ def build_parser() -> argparse.ArgumentParser:
     ask.add_argument("--json", action="store_true", help="输出完整 JSON（含 trace）")
     ask.add_argument("--save", default=None, help="把 output.json / trace.json 保存到目录")
     ask.add_argument("--api-key", default=None, help="OpenAI 兼容接口 key（勿提交到仓库）")
-    ask.add_argument("--base-url", default=None, help="如 https://api.openai.com/v1")
-    ask.add_argument("--model", default=None, help="模型名，如 gpt-4o-mini")
+    ask.add_argument("--base-url", default=None, help="如 https://api.openai.com/v1 或 http://127.0.0.1:11434/v1")
+    ask.add_argument("--model", default=None, help="模型名，如 gpt-4o-mini / qwen3-vl:4b")
+    ask.add_argument("--timeout", type=int, default=30, help="单次模型请求超时秒数（本地模型建议 120+）")
+    ask.add_argument("--max-tokens", type=int, default=1200, help="单次模型输出 token 上限")
     ask.set_defaults(func=cmd_ask)
 
     batch = sub.add_parser("batch", help="批量跑评测场景并写入 examples/")
@@ -315,8 +317,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="请求 openai 但未配置 key 时直接报错，不回退 mock",
     )
     batch.add_argument("--api-key", default=None, help="OpenAI 兼容接口 key（勿提交到仓库）")
-    batch.add_argument("--base-url", default=None, help="如 https://api.openai.com/v1")
-    batch.add_argument("--model", default=None, help="模型名，如 gpt-4o-mini")
+    batch.add_argument("--base-url", default=None, help="如 http://127.0.0.1:11434/v1")
+    batch.add_argument("--model", default=None, help="模型名，如 gpt-4o-mini / qwen3-vl:4b")
+    batch.add_argument("--timeout", type=int, default=30, help="单次模型请求超时秒数")
+    batch.add_argument("--max-tokens", type=int, default=1200, help="单次模型输出 token 上限")
     batch.set_defaults(func=cmd_batch)
 
     verify = sub.add_parser("verify", help="校验输出文件的引用与冲突说明")

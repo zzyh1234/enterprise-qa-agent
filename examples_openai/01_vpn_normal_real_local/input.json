@@ -1,0 +1,22 @@
+{
+  "scenario_id": "01_vpn_normal_real_local",
+  "title": "真实本地模型（Ollama qwen3-vl:4b）：正常路径 search → read → finish",
+  "question": "VPN 账号多久需要重新认证？",
+  "history": [],
+  "prior_scenario": null,
+  "corpus": "data/documents.json",
+  "planner": "openai",
+  "planner_requested": "openai",
+  "planner_fallback": false,
+  "replay": null,
+  "budget": {
+    "max_steps": 6,
+    "max_tool_calls": 4
+  },
+  "tool_faults": [],
+  "coverage": [
+    "真实模型决策",
+    "明确答案",
+    "引用原文"
+  ]
+}

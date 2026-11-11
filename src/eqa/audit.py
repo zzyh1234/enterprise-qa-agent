@@ -51,14 +51,27 @@ def audit_conflict(
     citations: Sequence[Citation],
     matcher: IntentMatcher,
     corpus: Corpus,
+    extra_sections: Sequence[tuple] = (),
 ) -> Dict[str, Any]:
     intent = matcher.detect(question)
     evidences = []
+    seen = set()
     for citation in citations:
         doc = corpus.get(citation.doc_id)
         section = doc.section(citation.section_id) if doc else None
         if doc is None or section is None:
             continue
+        if (doc.doc_id, section.section_id) in seen:
+            continue
+        seen.add((doc.doc_id, section.section_id))
+        evidences.append(build_evidence(doc, section, intent))
+    # 模型可能读过冲突条款却只引用其中一份：把「已读片段」也纳入冲突检查
+    for doc_id, section_id in extra_sections:
+        doc = corpus.get(doc_id)
+        section = doc.section(section_id) if doc else None
+        if doc is None or section is None or (doc.doc_id, section.section_id) in seen:
+            continue
+        seen.add((doc.doc_id, section.section_id))
         evidences.append(build_evidence(doc, section, intent))
     conflict = detect_conflict(evidences, intent)
     if conflict is None:
@@ -81,9 +94,12 @@ def audit_result(
     citations: Sequence[Citation],
     matcher: IntentMatcher,
     corpus: Corpus,
+    extra_sections: Sequence[tuple] = (),
 ) -> Dict[str, Any]:
     citation_checks = audit_citations(citations, corpus)
-    conflict_check = audit_conflict(question, answer, citations, matcher, corpus)
+    conflict_check = audit_conflict(
+        question, answer, citations, matcher, corpus, extra_sections=extra_sections
+    )
     citations_supported = all(check["supported"] for check in citation_checks)
     conflicts_acknowledged = conflict_check["acknowledged"]
     passed = citations_supported and conflicts_acknowledged

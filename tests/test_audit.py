@@ -133,6 +133,58 @@ class ModelGuardrailTests(unittest.TestCase):
         self.assertTrue(result.audit["conflict"]["detected"])
         self.assertFalse(result.audit["conflict"]["acknowledged"])
 
+    def test_answer_without_any_citation_is_rejected(self) -> None:
+        result = self.run_with_decisions(
+            [
+                {
+                    "action": "finish",
+                    "arguments": {
+                        "status": "answered",
+                        "answer": "报销期限为 15 天。",
+                        "citations": [],
+                    },
+                    "reason": "模型凭记忆直接作答",
+                }
+            ]
+        )
+        self.assertEqual(result.status, "audit_failed")
+        self.assertIn("没有提供任何逐字引用", result.answer)
+
+    def test_conflict_read_but_only_one_side_cited_is_rejected(self) -> None:
+        result = self.run_with_decisions(
+            [
+                {
+                    "action": "read_snippet",
+                    "arguments": {"doc_id": "D01", "section_id": "D01-4.2"},
+                    "reason": "先读 D01",
+                },
+                {
+                    "action": "read_snippet",
+                    "arguments": {"doc_id": "D02", "section_id": "D02-3.1"},
+                    "reason": "再读 D02",
+                },
+                {
+                    "action": "finish",
+                    "arguments": {
+                        "status": "answered",
+                        "answer": "报销期限为 15 天。",
+                        "citations": [
+                            {
+                                "doc_id": "D02",
+                                "section_id": "D02-3.1",
+                                "quote": "员工应在费用发生之日起 15 天内提交报销单据",
+                            }
+                        ],
+                    },
+                    "reason": "模型只引用较新的那一份",
+                },
+            ]
+        )
+        self.assertEqual(result.status, "audit_failed")
+        self.assertTrue(result.audit["conflict"]["detected"])
+        self.assertFalse(result.audit["conflict"]["acknowledged"])
+        self.assertIn("30", " ".join(result.audit["conflict"]["missing_in_answer"]))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -10,3 +10,6 @@ dist/
 *.egg-info/
 retrieval_report.txt
 check.txt
+tmp_*.txt
+_tmp_*.py
+ollama_serve.*.log
